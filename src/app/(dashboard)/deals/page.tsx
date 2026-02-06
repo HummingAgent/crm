@@ -18,7 +18,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X } from 'lucide-react';
+import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X, List, Columns } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
@@ -93,6 +93,7 @@ export default function DealsPage() {
   const [showNewDeal, setShowNewDeal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
+  const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -241,76 +242,144 @@ export default function DealsPage() {
     );
   }
 
+  const getStageColor = (stageId: string) => {
+    const stage = stages.find(s => s.id === stageId);
+    return stage?.color || '#71717a';
+  };
+
+  const getStageName = (stageId: string) => {
+    const stage = stages.find(s => s.id === stageId);
+    return stage?.name || stageId;
+  };
+
   return (
-    <div className="h-[calc(100vh-theme(spacing.32))]">
+    <div className="min-h-[calc(100vh-12rem)] lg:h-[calc(100vh-theme(spacing.32))]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 lg:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Deal Pipeline</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {deals.length} deals · {formatCurrency(deals.reduce((sum, d) => sum + (d.amount || 0), 0))} total value
+          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Deals</h1>
+          <p className="text-sm text-gray-500">
+            {filteredDeals.length} deals · {formatCurrency(filteredDeals.reduce((sum, d) => sum + (d.amount || 0), 0))}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'list' ? 'bg-white shadow-sm text-violet-600' : 'text-gray-500'
+              }`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('board')}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'board' ? 'bg-white shadow-sm text-violet-600' : 'text-gray-500'
+              }`}
+            >
+              <Columns className="w-4 h-4" />
+            </button>
+          </div>
           <button 
             onClick={() => setShowFilters(true)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-colors ${
               activeFilterCount > 0 
                 ? 'bg-violet-50 border-violet-200 text-violet-700' 
-                : 'text-gray-600 hover:text-gray-900 bg-white border-gray-200 hover:bg-gray-50'
+                : 'text-gray-600 bg-white border-gray-200'
             }`}
           >
             <Filter className="w-4 h-4" />
-            Filter
+            <span className="hidden sm:inline">Filter</span>
             {activeFilterCount > 0 && (
               <span className="px-1.5 py-0.5 bg-violet-100 text-violet-700 text-xs font-medium rounded">
                 {activeFilterCount}
               </span>
             )}
           </button>
-          {activeFilterCount > 0 && (
-            <button 
-              onClick={() => setFilters(emptyFilters)}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-              title="Clear filters"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
           <button 
             onClick={() => setShowNewDeal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg"
+            className="flex items-center gap-1.5 px-3 lg:px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg"
           >
             <Plus className="w-4 h-4" />
-            New Deal
+            <span className="hidden sm:inline">New Deal</span>
           </button>
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex gap-4 overflow-x-auto pb-4 h-full">
-          {stages.map((stage) => (
-            <DealColumn
-              key={stage.id}
-              stage={stage}
-              deals={getDealsByStage(stage.id)}
-              total={getStageTotal(stage.id)}
-            />
+      {/* List View (Mobile-friendly) */}
+      {viewMode === 'list' && (
+        <div className="space-y-2">
+          {filteredDeals.map((deal) => (
+            <div
+              key={deal.id}
+              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div 
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: getStageColor(deal.stage) }}
+                    />
+                    <h3 className="font-medium text-gray-900 truncate">{deal.name}</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-2">{getStageName(deal.stage)}</p>
+                  {deal.company && (
+                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="truncate">{deal.company.name}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-lg font-semibold text-gray-900">
+                    {deal.amount ? formatCurrency(deal.amount) : '—'}
+                  </p>
+                  {deal.expected_close_date && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(deal.expected_close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           ))}
+          {filteredDeals.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              No deals found
+            </div>
+          )}
         </div>
+      )}
 
-        <DragOverlay>
-          {activeDeal ? (
-            <DealCard deal={activeDeal} isDragging />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+      {/* Kanban Board (Desktop) */}
+      {viewMode === 'board' && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-4 overflow-x-auto pb-4 h-full -mx-4 px-4 lg:mx-0 lg:px-0">
+            {stages.map((stage) => (
+              <DealColumn
+                key={stage.id}
+                stage={stage}
+                deals={getDealsByStage(stage.id)}
+                total={getStageTotal(stage.id)}
+              />
+            ))}
+          </div>
+
+          <DragOverlay>
+            {activeDeal ? (
+              <DealCard deal={activeDeal} isDragging />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
 
       {/* New Deal Dialog */}
       {showNewDeal && (
