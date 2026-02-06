@@ -18,11 +18,12 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2 } from 'lucide-react';
+import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
 import { NewDealDialog } from '@/components/crm/new-deal-dialog';
+import { DealFilters } from '@/components/crm/deal-filters';
 
 interface Deal {
   id: string;
@@ -34,6 +35,7 @@ interface Deal {
   company_id: string | null;
   primary_contact_id: string | null;
   priority: string;
+  lead_source: string | null;
   last_activity_at: string | null;
   company?: {
     id: string;
@@ -67,12 +69,30 @@ const DEFAULT_STAGES: PipelineStage[] = [
   { id: 'closed-won', name: 'Closed Won', color: '#22c55e', position: 7, is_won: true, is_lost: false },
 ];
 
+interface Filters {
+  stages: string[];
+  priorities: string[];
+  sources: string[];
+  minAmount: number | null;
+  maxAmount: number | null;
+}
+
+const emptyFilters: Filters = {
+  stages: [],
+  priorities: [],
+  sources: [],
+  minAmount: null,
+  maxAmount: null,
+};
+
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [stages, setStages] = useState<PipelineStage[]>(DEFAULT_STAGES);
   const [loading, setLoading] = useState(true);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [showNewDeal, setShowNewDeal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Filters>(emptyFilters);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -165,8 +185,39 @@ export default function DealsPage() {
     }
   };
 
+  // Apply filters to deals
+  const filteredDeals = deals.filter(deal => {
+    // Stage filter (only if specific stages selected)
+    if (filters.stages.length > 0 && !filters.stages.includes(deal.stage)) {
+      return false;
+    }
+    // Priority filter
+    if (filters.priorities.length > 0 && !filters.priorities.includes(deal.priority)) {
+      return false;
+    }
+    // Source filter
+    if (filters.sources.length > 0 && !filters.sources.includes(deal.lead_source || '')) {
+      return false;
+    }
+    // Amount range
+    if (filters.minAmount && (deal.amount || 0) < filters.minAmount) {
+      return false;
+    }
+    if (filters.maxAmount && (deal.amount || 0) > filters.maxAmount) {
+      return false;
+    }
+    return true;
+  });
+
+  const activeFilterCount = 
+    filters.stages.length + 
+    filters.priorities.length + 
+    filters.sources.length +
+    (filters.minAmount ? 1 : 0) +
+    (filters.maxAmount ? 1 : 0);
+
   const getDealsByStage = (stageId: string) => {
-    return deals.filter(d => d.stage === stageId);
+    return filteredDeals.filter(d => d.stage === stageId);
   };
 
   const getStageTotal = (stageId: string) => {
@@ -201,10 +252,31 @@ export default function DealsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button 
+            onClick={() => setShowFilters(true)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
+              activeFilterCount > 0 
+                ? 'bg-violet-50 border-violet-200 text-violet-700' 
+                : 'text-gray-600 hover:text-gray-900 bg-white border-gray-200 hover:bg-gray-50'
+            }`}
+          >
             <Filter className="w-4 h-4" />
             Filter
+            {activeFilterCount > 0 && (
+              <span className="px-1.5 py-0.5 bg-violet-100 text-violet-700 text-xs font-medium rounded">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
+          {activeFilterCount > 0 && (
+            <button 
+              onClick={() => setFilters(emptyFilters)}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              title="Clear filters"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
           <button 
             onClick={() => setShowNewDeal(true)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg"
@@ -249,6 +321,15 @@ export default function DealsPage() {
             setShowNewDeal(false);
           }}
           stages={stages}
+        />
+      )}
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <DealFilters
+          filters={filters}
+          onChange={setFilters}
+          onClose={() => setShowFilters(false)}
         />
       )}
     </div>
