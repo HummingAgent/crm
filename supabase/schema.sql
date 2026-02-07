@@ -1,5 +1,21 @@
 -- HummingAgent CRM Schema
 -- Prefix: crm_ (to share db with other apps)
+-- 
+-- USAGE: Run this entire file in Supabase SQL Editor
+-- If you get errors, run the CLEANUP section first, then re-run everything.
+
+-- =====================================================
+-- CLEANUP (uncomment if you need to reset)
+-- =====================================================
+-- DROP TABLE IF EXISTS crm_deal_products CASCADE;
+-- DROP TABLE IF EXISTS crm_products CASCADE;
+-- DROP TABLE IF EXISTS crm_activities CASCADE;
+-- DROP TABLE IF EXISTS crm_deal_contacts CASCADE;
+-- DROP TABLE IF EXISTS crm_deals CASCADE;
+-- DROP TABLE IF EXISTS crm_contacts CASCADE;
+-- DROP TABLE IF EXISTS crm_companies CASCADE;
+-- DROP TABLE IF EXISTS crm_pipeline_stages CASCADE;
+-- DROP FUNCTION IF EXISTS crm_update_updated_at() CASCADE;
 
 -- =====================================================
 -- COMPANIES
