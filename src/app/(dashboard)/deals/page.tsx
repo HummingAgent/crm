@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase/client';
 import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
 import { NewDealDialog } from '@/components/crm/new-deal-dialog';
+import { EditDealDialog } from '@/components/crm/edit-deal-dialog';
 import { DealFilters } from '@/components/crm/deal-filters';
 import { DealDetailPanel } from '@/components/crm/deal-detail-panel';
 
@@ -278,8 +279,6 @@ export default function DealsPage() {
 
   const handleEditDeal = (deal: Deal) => {
     setEditingDeal(deal);
-    // TODO: Open edit modal
-    console.log('Edit deal:', deal.id);
   };
 
   const handleDeleteDeal = async (deal: Deal) => {
@@ -454,6 +453,23 @@ export default function DealsPage() {
           }}
           stages={stages}
           defaultStage={defaultStage}
+        />
+      )}
+
+      {/* Edit Deal Dialog */}
+      {editingDeal && (
+        <EditDealDialog
+          deal={editingDeal}
+          onClose={() => setEditingDeal(null)}
+          onUpdated={(updatedDeal) => {
+            setDeals(prev => prev.map(d => d.id === updatedDeal.id ? updatedDeal : d));
+            setEditingDeal(null);
+            // Also update selectedDeal if it's the same deal
+            if (selectedDeal?.id === updatedDeal.id) {
+              setSelectedDeal(updatedDeal);
+            }
+          }}
+          stages={stages}
         />
       )}
 
