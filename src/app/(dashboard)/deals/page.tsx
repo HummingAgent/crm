@@ -26,6 +26,7 @@ import { NewDealDialog } from '@/components/crm/new-deal-dialog';
 import { EditDealDialog } from '@/components/crm/edit-deal-dialog';
 import { DealFilters } from '@/components/crm/deal-filters';
 import { DealDetailPanel } from '@/components/crm/deal-detail-panel';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface Deal {
   id: string;
@@ -100,6 +101,7 @@ export default function DealsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState<string | null>(null);
 
   // Detect mobile and set default view
   useEffect(() => {
@@ -299,6 +301,72 @@ export default function DealsPage() {
     }
   };
 
+  const handleMoveAllDeals = async (fromStageId: string, toStageId: string) => {
+    const supabase = createClient();
+    const dealsToMove = deals.filter(d => d.stage === fromStageId);
+    
+    if (dealsToMove.length === 0) return;
+
+    // Optimistic update
+    setDeals(prev => prev.map(d => 
+      d.stage === fromStageId ? { ...d, stage: toStageId } : d
+    ));
+
+    // Update all deals in database
+    const { error } = await supabase
+      .from('crm_deals')
+      .update({ 
+        stage: toStageId,
+        last_activity_at: new Date().toISOString()
+      })
+      .eq('stage', fromStageId);
+
+    if (error) {
+      // Revert on error
+      setDeals(prev => prev.map(d => {
+        const original = dealsToMove.find(dm => dm.id === d.id);
+        return original ? { ...d, stage: fromStageId } : d;
+      }));
+      console.error('Failed to move deals:', error);
+    } else {
+      // Log activities for each moved deal
+      const fromStageName = stages.find(s => s.id === fromStageId)?.name;
+      const toStageName = stages.find(s => s.id === toStageId)?.name;
+      
+      await supabase.from('crm_activities').insert(
+        dealsToMove.map(deal => ({
+          deal_id: deal.id,
+          type: 'stage-change',
+          stage_from: fromStageId,
+          stage_to: toStageId,
+          subject: `Deal moved to ${toStageName} (bulk move from ${fromStageName})`,
+        }))
+      );
+    }
+  };
+
+  const handleDeleteAllDeals = async (stageId: string) => {
+    const supabase = createClient();
+    const dealsToDelete = deals.filter(d => d.stage === stageId);
+    
+    if (dealsToDelete.length === 0) return;
+
+    // Optimistic removal
+    setDeals(prev => prev.filter(d => d.stage !== stageId));
+    setConfirmDeleteAll(null);
+
+    const { error } = await supabase
+      .from('crm_deals')
+      .delete()
+      .eq('stage', stageId);
+
+    if (error) {
+      // Revert on error
+      setDeals(prev => [...prev, ...dealsToDelete]);
+      console.error('Failed to delete deals:', error);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-12rem)] lg:h-[calc(100vh-theme(spacing.32))] pb-20 lg:pb-0">
       {/* Header */}
@@ -420,6 +488,7 @@ export default function DealsPage() {
                 stage={stage}
                 deals={getDealsByStage(stage.id)}
                 total={getStageTotal(stage.id)}
+                allStages={stages}
                 onAddDeal={(stageId) => {
                   setDefaultStage(stageId);
                   setShowNewDeal(true);
@@ -427,6 +496,8 @@ export default function DealsPage() {
                 onViewDeal={handleViewDeal}
                 onEditDeal={handleEditDeal}
                 onDeleteDeal={handleDeleteDeal}
+                onMoveAllDeals={handleMoveAllDeals}
+                onDeleteAllDeals={(stageId) => setConfirmDeleteAll(stageId)}
               />
             ))}
           </div>
@@ -500,6 +571,17 @@ export default function DealsPage() {
       >
         <Plus className="w-6 h-6" />
       </button>
+
+      {/* Confirm Delete All Modal */}
+      <ConfirmModal
+        isOpen={!!confirmDeleteAll}
+        title="Delete All Deals"
+        message={confirmDeleteAll ? `Are you sure you want to delete all ${getDealsByStage(confirmDeleteAll).length} deals in "${stages.find(s => s.id === confirmDeleteAll)?.name}"? This cannot be undone.` : ''}
+        confirmText="Delete All"
+        confirmVariant="danger"
+        onConfirm={() => confirmDeleteAll && handleDeleteAllDeals(confirmDeleteAll)}
+        onCancel={() => setConfirmDeleteAll(null)}
+      />
     </div>
   );
 }

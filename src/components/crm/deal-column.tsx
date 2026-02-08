@@ -1,10 +1,21 @@
 'use client';
 
+import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import { Plus, MoreHorizontal, ChevronDown, ChevronRight, ArrowRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DealCard } from './deal-card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Deal {
   id: string;
@@ -44,13 +55,28 @@ interface DealColumnProps {
   stage: PipelineStage;
   deals: Deal[];
   total: number;
+  allStages?: PipelineStage[];
   onAddDeal?: (stageId: string) => void;
   onViewDeal?: (deal: Deal) => void;
   onEditDeal?: (deal: Deal) => void;
   onDeleteDeal?: (deal: Deal) => void;
+  onMoveAllDeals?: (fromStageId: string, toStageId: string) => void;
+  onDeleteAllDeals?: (stageId: string) => void;
 }
 
-export function DealColumn({ stage, deals, total, onAddDeal, onViewDeal, onEditDeal, onDeleteDeal }: DealColumnProps) {
+export function DealColumn({ 
+  stage, 
+  deals, 
+  total, 
+  allStages = [],
+  onAddDeal, 
+  onViewDeal, 
+  onEditDeal, 
+  onDeleteDeal,
+  onMoveAllDeals,
+  onDeleteAllDeals,
+}: DealColumnProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: stage.id,
   });
@@ -65,11 +91,47 @@ export function DealColumn({ stage, deals, total, onAddDeal, onViewDeal, onEditD
     return `$${amount}`;
   };
 
+  // Other stages for "Move all to..." menu
+  const otherStages = allStages.filter(s => s.id !== stage.id);
+
+  if (isCollapsed) {
+    return (
+      <div 
+        className="flex-shrink-0 w-12 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+        onClick={() => setIsCollapsed(false)}
+      >
+        <div className="flex flex-col items-center py-3 gap-2">
+          <div 
+            className="w-3 h-3 rounded-full" 
+            style={{ backgroundColor: stage.color }}
+          />
+          <span className="text-xs font-medium text-gray-600 writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+            {stage.name}
+          </span>
+          <span className="px-1.5 py-0.5 bg-gray-200 rounded-full text-xs font-medium text-gray-600">
+            {deals.length}
+          </span>
+          <span className="text-xs text-gray-500 writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+            {formatCurrency(total)}
+          </span>
+          <ChevronRight className="w-4 h-4 text-gray-400 mt-2" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-shrink-0 w-72">
       {/* Column Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setIsCollapsed(true)}
+            className="p-0.5 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100"
+            title="Collapse column"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
           <div 
             className="w-3 h-3 rounded-full" 
             style={{ backgroundColor: stage.color }}
@@ -79,9 +141,63 @@ export function DealColumn({ stage, deals, total, onAddDeal, onViewDeal, onEditD
             {deals.length}
           </span>
         </div>
-        <button className="p-1 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add deal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsCollapsed(true)}>
+              <ChevronRight className="w-4 h-4 mr-2" />
+              Collapse column
+            </DropdownMenuItem>
+            
+            {deals.length > 0 && otherStages.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Move all to...
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-48">
+                    {otherStages.map((targetStage) => (
+                      <DropdownMenuItem 
+                        key={targetStage.id}
+                        onClick={() => onMoveAllDeals?.(stage.id, targetStage.id)}
+                      >
+                        <div 
+                          className="w-2 h-2 rounded-full mr-2" 
+                          style={{ backgroundColor: targetStage.color }}
+                        />
+                        {targetStage.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </>
+            )}
+            
+            {deals.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  variant="destructive"
+                  onClick={() => onDeleteAllDeals?.(stage.id)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete all ({deals.length})
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Total value */}
