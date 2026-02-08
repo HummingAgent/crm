@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Users, 
@@ -18,9 +18,11 @@ import {
   Plus,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -42,43 +44,42 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   const NavContent = () => (
     <>
-      {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-4 lg:px-6 lg:py-5 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-            <span className="text-white font-bold text-lg">H</span>
+      {/* Logo - clickable to home */}
+      <div className="flex items-center justify-between px-4 py-4 lg:px-6 lg:py-5 border-b border-gray-100/50">
+        <Link 
+          href="/"
+          onClick={() => setSidebarOpen(false)}
+          className="flex items-center gap-3 group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-all group-hover:scale-105">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div className="hidden sm:block">
-            <h1 className="font-semibold text-gray-900">HummingAgent</h1>
-            <p className="text-xs text-gray-500">CRM</p>
+            <h1 className="font-bold text-gray-900 group-hover:text-violet-600 transition-colors">HummingAgent</h1>
+            <p className="text-xs text-gray-400 font-medium">CRM</p>
           </div>
-        </div>
+        </Link>
         <button 
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+          className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Quick actions */}
-      <div className="p-4">
-        <Link 
-          href="/deals"
-          onClick={() => setSidebarOpen(false)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Deal
-        </Link>
-      </div>
-
       {/* Main navigation */}
-      <nav className="px-3 py-2 flex-1 overflow-y-auto">
+      <nav className="px-3 py-4 flex-1 overflow-y-auto">
         <div className="space-y-1">
           {navigation.map((item) => {
             const isActive = pathname === item.href || 
@@ -89,24 +90,29 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition-colors',
+                  'group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
                   isActive
-                    ? 'bg-violet-50 text-violet-700'
+                    ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 text-violet-700 shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className={cn('w-5 h-5', isActive ? 'text-violet-600' : 'text-gray-400')} />
+                  <div className={cn(
+                    'p-1.5 rounded-lg transition-colors',
+                    isActive ? 'bg-violet-500/10' : 'group-hover:bg-gray-100'
+                  )}>
+                    <item.icon className={cn('w-4 h-4', isActive ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600')} />
+                  </div>
                   {item.name}
                 </div>
-                <ChevronRight className={cn('w-4 h-4 lg:hidden', isActive ? 'text-violet-400' : 'text-gray-300')} />
+                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
               </Link>
             );
           })}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <p className="px-4 text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+        <div className="mt-6 pt-6 border-t border-gray-100/70">
+          <p className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Tools
           </p>
           <div className="space-y-1">
@@ -118,17 +124,22 @@ export default function DashboardLayout({
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    'flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition-colors',
+                    'group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'bg-violet-50 text-violet-700'
+                      ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 text-violet-700 shadow-sm'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <item.icon className={cn('w-5 h-5', isActive ? 'text-violet-600' : 'text-gray-400')} />
+                    <div className={cn(
+                      'p-1.5 rounded-lg transition-colors',
+                      isActive ? 'bg-violet-500/10' : 'group-hover:bg-gray-100'
+                    )}>
+                      <item.icon className={cn('w-4 h-4', isActive ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600')} />
+                    </div>
                     {item.name}
                   </div>
-                  <ChevronRight className={cn('w-4 h-4 lg:hidden', isActive ? 'text-violet-400' : 'text-gray-300')} />
+                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
                 </Link>
               );
             })}
@@ -137,16 +148,20 @@ export default function DashboardLayout({
       </nav>
 
       {/* User section at bottom */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100/50 bg-gradient-to-t from-gray-50/50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white font-medium">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold shadow-md shadow-violet-500/20">
             SK
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">Shawn Kercher</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">Shawn Kercher</p>
             <p className="text-xs text-gray-500 truncate">Admin</p>
           </div>
-          <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+          <button 
+            onClick={handleLogout}
+            className="p-2.5 text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+            title="Sign out"
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
