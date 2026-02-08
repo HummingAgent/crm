@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DollarSign, Calendar, Building2, User, MoreHorizontal } from 'lucide-react';
+import { DollarSign, Calendar, Building2, User, MoreHorizontal, Eye, Pencil, Trash2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Deal {
@@ -29,9 +30,27 @@ interface Deal {
 interface DealCardProps {
   deal: Deal;
   isDragging?: boolean;
+  onView?: (deal: Deal) => void;
+  onEdit?: (deal: Deal) => void;
+  onDelete?: (deal: Deal) => void;
 }
 
-export function DealCard({ deal, isDragging }: DealCardProps) {
+export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCardProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
   const {
     attributes,
     listeners,
@@ -82,12 +101,69 @@ export function DealCard({ deal, isDragging }: DealCardProps) {
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        <h3 className="font-medium text-gray-900 text-sm leading-tight pr-2">
+        <h3 
+          className="font-medium text-gray-900 text-sm leading-tight pr-2 cursor-pointer hover:text-violet-600"
+          onClick={(e) => {
+            e.stopPropagation();
+            onView?.(deal);
+          }}
+        >
           {deal.name}
         </h3>
-        <button className="p-1 text-gray-400 hover:text-gray-600 rounded -mr-1 -mt-1">
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowMenu(!showMenu);
+            }}
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg -mr-1 -mt-1 transition-colors"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+          
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <div className="absolute right-0 top-8 z-50 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 animate-in fade-in slide-in-from-top-2 duration-150">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView?.(deal);
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <Eye className="w-4 h-4" />
+                View Details
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(deal);
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit Deal
+              </button>
+              <div className="border-t border-gray-100 my-1" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm('Delete this deal?')) {
+                    onDelete?.(deal);
+                  }
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Company */}
