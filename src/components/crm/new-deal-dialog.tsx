@@ -28,9 +28,10 @@ interface NewDealDialogProps {
   onClose: () => void;
   onCreated: (deal: any) => void;
   stages: PipelineStage[];
+  defaultStage?: string;
 }
 
-export function NewDealDialog({ onClose, onCreated, stages }: NewDealDialogProps) {
+export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewDealDialogProps) {
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -39,7 +40,7 @@ export function NewDealDialog({ onClose, onCreated, stages }: NewDealDialogProps
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    stage: stages[0]?.id || 'new-lead',
+    stage: defaultStage || stages[0]?.id || 'new-lead',
     amount: '',
     expected_close_date: '',
     company_id: '',

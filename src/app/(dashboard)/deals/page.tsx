@@ -91,6 +91,7 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [showNewDeal, setShowNewDeal] = useState(false);
+  const [defaultStage, setDefaultStage] = useState<string>('new-lead');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
@@ -369,6 +370,10 @@ export default function DealsPage() {
                 stage={stage}
                 deals={getDealsByStage(stage.id)}
                 total={getStageTotal(stage.id)}
+                onAddDeal={(stageId) => {
+                  setDefaultStage(stageId);
+                  setShowNewDeal(true);
+                }}
               />
             ))}
           </div>
@@ -384,12 +389,17 @@ export default function DealsPage() {
       {/* New Deal Dialog */}
       {showNewDeal && (
         <NewDealDialog
-          onClose={() => setShowNewDeal(false)}
+          onClose={() => {
+            setShowNewDeal(false);
+            setDefaultStage('new-lead');
+          }}
           onCreated={(newDeal) => {
             setDeals(prev => [newDeal, ...prev]);
             setShowNewDeal(false);
+            setDefaultStage('new-lead');
           }}
           stages={stages}
+          defaultStage={defaultStage}
         />
       )}
 
