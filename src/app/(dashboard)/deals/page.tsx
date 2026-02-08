@@ -18,7 +18,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X, List, Columns } from 'lucide-react';
+import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X, List, Columns, Pencil, Trash2, Eye } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
@@ -27,6 +27,7 @@ import { EditDealDialog } from '@/components/crm/edit-deal-dialog';
 import { DealFilters } from '@/components/crm/deal-filters';
 import { DealDetailPanel } from '@/components/crm/deal-detail-panel';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { SwipeableRow } from '@/components/ui/swipeable-row';
 
 interface Deal {
   id: string;
@@ -426,49 +427,88 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* List View (Mobile-friendly) */}
+      {/* List View (Mobile-friendly with swipe gestures) */}
       {viewMode === 'list' && (
         <div className="space-y-2">
           {filteredDeals.map((deal) => (
-            <div
+            <SwipeableRow
               key={deal.id}
-              onClick={() => handleViewDeal(deal)}
-              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+              className="rounded-xl overflow-hidden"
+              leftActions={[
+                {
+                  icon: <Eye className="w-5 h-5" />,
+                  label: 'View',
+                  color: 'text-white',
+                  bgColor: 'bg-violet-500',
+                  onClick: () => handleViewDeal(deal),
+                },
+              ]}
+              rightActions={[
+                {
+                  icon: <Pencil className="w-5 h-5" />,
+                  label: 'Edit',
+                  color: 'text-white',
+                  bgColor: 'bg-blue-500',
+                  onClick: () => handleEditDeal(deal),
+                },
+                {
+                  icon: <Trash2 className="w-5 h-5" />,
+                  label: 'Delete',
+                  color: 'text-white',
+                  bgColor: 'bg-red-500',
+                  onClick: () => {
+                    if (confirm('Delete this deal?')) {
+                      handleDeleteDeal(deal);
+                    }
+                  },
+                },
+              ]}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div 
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: getStageColor(deal.stage) }}
-                    />
-                    <h3 className="font-medium text-gray-900 truncate">{deal.name}</h3>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-2">{getStageName(deal.stage)}</p>
-                  {deal.company && (
-                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                      <Building2 className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="truncate">{deal.company.name}</span>
+              <div
+                onClick={() => handleViewDeal(deal)}
+                className="bg-white border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div 
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: getStageColor(deal.stage) }}
+                      />
+                      <h3 className="font-medium text-gray-900 truncate">{deal.name}</h3>
                     </div>
-                  )}
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-lg font-semibold text-gray-900">
-                    {deal.amount ? formatCurrency(deal.amount) : '—'}
-                  </p>
-                  {deal.expected_close_date && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(deal.expected_close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    <p className="text-sm text-gray-500 mb-2">{getStageName(deal.stage)}</p>
+                    {deal.company && (
+                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="truncate">{deal.company.name}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-lg font-semibold text-gray-900">
+                      {deal.amount ? formatCurrency(deal.amount) : '—'}
                     </p>
-                  )}
+                    {deal.expected_close_date && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(deal.expected_close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </SwipeableRow>
           ))}
           {filteredDeals.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               No deals found
             </div>
+          )}
+          {/* Swipe hint for first-time users */}
+          {isMobile && filteredDeals.length > 0 && (
+            <p className="text-center text-xs text-gray-400 mt-4">
+              ← Swipe left to edit/delete • Swipe right to view →
+            </p>
           )}
         </div>
       )}

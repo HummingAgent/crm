@@ -17,7 +17,11 @@ import {
   MessageSquare,
   ChevronRight,
   ArrowLeft,
-  Send
+  Send,
+  TrendingUp,
+  ArrowRight,
+  AlertCircle,
+  Trophy
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -42,6 +46,18 @@ interface Deal {
   deal_type: string | null;
   created_at: string;
   last_activity_at: string | null;
+  // HubSpot fields
+  probability?: number | null;
+  weighted_amount?: number | null;
+  monthly_recurring_revenue?: number | null;
+  total_contract_value?: number | null;
+  closed_won_reason?: string | null;
+  closed_lost_reason?: string | null;
+  dead_deal_reason?: string | null;
+  next_step?: string | null;
+  next_activity_date?: string | null;
+  tags?: string[] | null;
+  lead_type?: string | null;
   company?: {
     id: string;
     name: string;
@@ -72,7 +88,7 @@ interface DealDetailPanelProps {
   onClose: () => void;
   onEdit?: (deal: Deal) => void;
   onDelete?: (deal: Deal) => void;
-  stages: { id: string; name: string; color: string }[];
+  stages: { id: string; name: string; color: string; is_won?: boolean; is_lost?: boolean }[];
 }
 
 export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: DealDetailPanelProps) {
@@ -174,6 +190,9 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
   }
 
   const stage = getStage(deal.stage);
+  const isClosedWon = stage?.is_won || deal.stage === 'closed-won';
+  const isClosedLost = stage?.is_lost || deal.stage === 'closed-lost';
+  const isDead = deal.stage === 'dead' || deal.stage === 'dead-deals';
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -278,25 +297,127 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
         <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-safe">
           {activeTab === 'details' && (
             <div className="space-y-6">
-              {/* Amount */}
+              {/* Closed Won Reason */}
+              {isClosedWon && deal.closed_won_reason && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center gap-2 text-green-700 mb-2">
+                    <Trophy className="w-5 h-5" />
+                    <span className="font-medium">Why We Won</span>
+                  </div>
+                  <p className="text-sm text-green-800">{deal.closed_won_reason}</p>
+                </div>
+              )}
+
+              {/* Closed Lost Reason */}
+              {isClosedLost && deal.closed_lost_reason && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-center gap-2 text-red-700 mb-2">
+                    <AlertCircle className="w-5 h-5" />
+                    <span className="font-medium">Why We Lost</span>
+                  </div>
+                  <p className="text-sm text-red-800">{deal.closed_lost_reason}</p>
+                </div>
+              )}
+
+              {/* Dead Deal Reason */}
+              {isDead && deal.dead_deal_reason && (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="flex items-center gap-2 text-gray-700 mb-2">
+                    <AlertCircle className="w-5 h-5" />
+                    <span className="font-medium">Why Deal Went Dead</span>
+                  </div>
+                  <p className="text-sm text-gray-700">{deal.dead_deal_reason}</p>
+                </div>
+              )}
+
+              {/* Next Step */}
+              {deal.next_step && (
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
+                  <div className="flex items-center gap-2 text-violet-700 mb-2">
+                    <ArrowRight className="w-5 h-5" />
+                    <span className="font-medium">Next Step</span>
+                    {deal.next_activity_date && (
+                      <span className="text-xs text-violet-500 ml-auto">
+                        Due: {formatDate(deal.next_activity_date)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-violet-800">{deal.next_step}</p>
+                </div>
+              )}
+
+              {/* Amount & Probability */}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-100 rounded-lg">
                     <DollarSign className="w-5 h-5 text-green-600" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-gray-500">Deal Value</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {deal.amount ? formatCurrency(deal.amount) : 'Not set'}
                     </p>
-                    {deal.annual_contract_value && (
-                      <p className="text-sm text-gray-500">
-                        ACV: {formatCurrency(deal.annual_contract_value)}
-                      </p>
-                    )}
+                    <div className="flex gap-4 mt-1 text-sm text-gray-500">
+                      {deal.probability !== null && deal.probability !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          {Math.round(deal.probability * 100)}% probability
+                        </span>
+                      )}
+                      {deal.weighted_amount && (
+                        <span>
+                          Weighted: {formatCurrency(deal.weighted_amount)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Revenue Metrics */}
+              {(deal.monthly_recurring_revenue || deal.total_contract_value || deal.annual_contract_value) && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {deal.monthly_recurring_revenue && (
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <p className="text-xs text-blue-600 font-medium">MRR</p>
+                      <p className="text-lg font-bold text-blue-900">
+                        {formatCurrency(deal.monthly_recurring_revenue)}
+                      </p>
+                    </div>
+                  )}
+                  {deal.annual_contract_value && (
+                    <div className="bg-purple-50 rounded-lg p-3">
+                      <p className="text-xs text-purple-600 font-medium">ACV</p>
+                      <p className="text-lg font-bold text-purple-900">
+                        {formatCurrency(deal.annual_contract_value)}
+                      </p>
+                    </div>
+                  )}
+                  {deal.total_contract_value && (
+                    <div className="bg-indigo-50 rounded-lg p-3">
+                      <p className="text-xs text-indigo-600 font-medium">TCV</p>
+                      <p className="text-lg font-bold text-indigo-900">
+                        {formatCurrency(deal.total_contract_value)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tags */}
+              {deal.tags && deal.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {deal.tags.map((tag, i) => (
+                    <span 
+                      key={i}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                    >
+                      <Tag className="w-3 h-3" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Key Dates */}
               <div className="grid grid-cols-2 gap-4">
@@ -405,6 +526,12 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-500">Deal Type</span>
                     <span className="text-sm font-medium text-gray-900">{deal.deal_type}</span>
+                  </div>
+                )}
+                {deal.lead_type && (
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-500">Lead Type</span>
+                    <span className="text-sm font-medium text-gray-900">{deal.lead_type}</span>
                   </div>
                 )}
                 {deal.lead_source && (
