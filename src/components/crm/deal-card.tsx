@@ -13,7 +13,11 @@ interface Deal {
   stage: string;
   amount: number | null;
   expected_close_date: string | null;
+  company_id: string | null;
+  primary_contact_id: string | null;
   priority: string;
+  lead_source: string | null;
+  last_activity_at: string | null;
   company?: {
     id: string;
     name: string;

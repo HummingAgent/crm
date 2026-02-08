@@ -13,7 +13,11 @@ interface Deal {
   stage: string;
   amount: number | null;
   expected_close_date: string | null;
+  company_id: string | null;
+  primary_contact_id: string | null;
   priority: string;
+  lead_source: string | null;
+  last_activity_at: string | null;
   company?: {
     id: string;
     name: string;
@@ -41,9 +45,12 @@ interface DealColumnProps {
   deals: Deal[];
   total: number;
   onAddDeal?: (stageId: string) => void;
+  onViewDeal?: (deal: Deal) => void;
+  onEditDeal?: (deal: Deal) => void;
+  onDeleteDeal?: (deal: Deal) => void;
 }
 
-export function DealColumn({ stage, deals, total, onAddDeal }: DealColumnProps) {
+export function DealColumn({ stage, deals, total, onAddDeal, onViewDeal, onEditDeal, onDeleteDeal }: DealColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: stage.id,
   });
@@ -94,7 +101,13 @@ export function DealColumn({ stage, deals, total, onAddDeal }: DealColumnProps) 
       >
         <SortableContext items={deals.map(d => d.id)} strategy={verticalListSortingStrategy}>
           {deals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} />
+            <DealCard 
+              key={deal.id} 
+              deal={deal} 
+              onView={onViewDeal}
+              onEdit={onEditDeal}
+              onDelete={onDeleteDeal}
+            />
           ))}
         </SortableContext>
 

@@ -96,6 +96,8 @@ export default function DealsPage() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
 
   // Detect mobile and set default view
   useEffect(() => {
@@ -269,6 +271,36 @@ export default function DealsPage() {
     return stage?.name || stageId;
   };
 
+  const handleViewDeal = (deal: Deal) => {
+    setSelectedDeal(deal);
+    // TODO: Open deal detail modal/page
+    console.log('View deal:', deal.id);
+  };
+
+  const handleEditDeal = (deal: Deal) => {
+    setEditingDeal(deal);
+    // TODO: Open edit modal
+    console.log('Edit deal:', deal.id);
+  };
+
+  const handleDeleteDeal = async (deal: Deal) => {
+    const supabase = createClient();
+    
+    // Optimistic removal
+    setDeals(prev => prev.filter(d => d.id !== deal.id));
+
+    const { error } = await supabase
+      .from('crm_deals')
+      .delete()
+      .eq('id', deal.id);
+
+    if (error) {
+      // Revert on error
+      setDeals(prev => [...prev, deal]);
+      console.error('Failed to delete deal:', error);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-12rem)] lg:h-[calc(100vh-theme(spacing.32))] pb-20 lg:pb-0">
       {/* Header */}
@@ -393,6 +425,9 @@ export default function DealsPage() {
                   setDefaultStage(stageId);
                   setShowNewDeal(true);
                 }}
+                onViewDeal={handleViewDeal}
+                onEditDeal={handleEditDeal}
+                onDeleteDeal={handleDeleteDeal}
               />
             ))}
           </div>
