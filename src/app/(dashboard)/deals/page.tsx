@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { 
   DndContext, 
   DragOverlay,
-  closestCorners,
+  closestCenter,
+  pointerWithin,
+  rectIntersection,
+  getFirstCollision,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -12,6 +15,8 @@ import {
   DragStartEvent,
   DragEndEvent,
   DragOverEvent,
+  CollisionDetection,
+  UniqueIdentifier,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -129,6 +134,31 @@ export default function DealsPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Custom collision detection that prioritizes column drops
+  const collisionDetectionStrategy: CollisionDetection = (args) => {
+    // First, check if we're over any column (stage)
+    const stageIds = stages.map(s => s.id);
+    
+    // Use pointerWithin for more accurate detection
+    const pointerCollisions = pointerWithin(args);
+    const columnCollision = pointerCollisions.find(c => stageIds.includes(c.id as string));
+    
+    if (columnCollision) {
+      return [columnCollision];
+    }
+    
+    // Fall back to rectIntersection for edge cases
+    const rectCollisions = rectIntersection(args);
+    const rectColumnCollision = rectCollisions.find(c => stageIds.includes(c.id as string));
+    
+    if (rectColumnCollision) {
+      return [rectColumnCollision];
+    }
+    
+    // Last resort: use closestCenter
+    return closestCenter(args);
+  };
 
   useEffect(() => {
     loadData();
@@ -517,7 +547,7 @@ export default function DealsPage() {
       {viewMode === 'board' && (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={collisionDetectionStrategy}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
