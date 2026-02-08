@@ -15,7 +15,8 @@ import {
   Edit2,
   Trash2,
   MessageSquare,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -173,18 +174,26 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      {/* Backdrop - hidden on mobile since panel is full-screen */}
+      <div className="absolute inset-0 bg-black/50 hidden md:block" onClick={onClose} />
       
-      {/* Panel */}
-      <div className="absolute right-0 top-0 bottom-0 w-full max-w-xl bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-200">
+      {/* Panel - full screen on mobile, slide-in on desktop */}
+      <div className="absolute inset-0 md:inset-auto md:right-0 md:top-0 md:bottom-0 md:w-full md:max-w-xl bg-white shadow-xl flex flex-col animate-in slide-in-from-right md:slide-in-from-right duration-200 slide-in-from-bottom">
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-gray-200">
+        <div className="flex items-start justify-between p-4 md:p-6 border-b border-gray-200 safe-area-pt">
+          {/* Mobile back button */}
+          <button 
+            onClick={onClose}
+            className="md:hidden p-2 -ml-2 mr-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 active:bg-gray-200"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          
           <div className="flex-1 min-w-0 pr-4">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               {stage && (
                 <span 
-                  className="px-2 py-1 rounded-full text-xs font-medium text-white"
+                  className="px-2.5 py-1 rounded-full text-xs font-medium text-white"
                   style={{ backgroundColor: stage.color }}
                 >
                   {stage.name}
@@ -192,23 +201,23 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
               )}
               {deal.priority && deal.priority !== 'medium' && (
                 <span className={cn(
-                  'px-2 py-1 rounded-full text-xs font-medium',
+                  'px-2.5 py-1 rounded-full text-xs font-medium',
                   priorityColors[deal.priority as keyof typeof priorityColors]
                 )}>
                   {deal.priority}
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-bold text-gray-900 truncate">{deal.name}</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 line-clamp-2">{deal.name}</h2>
             {deal.company && (
               <p className="text-sm text-gray-500 mt-1">{deal.company.name}</p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             {onEdit && (
               <button 
                 onClick={() => onEdit(deal)}
-                className="p-2 text-gray-400 hover:text-violet-600 rounded-lg hover:bg-violet-50"
+                className="p-2.5 text-gray-400 hover:text-violet-600 rounded-lg hover:bg-violet-50 active:bg-violet-100"
               >
                 <Edit2 className="w-5 h-5" />
               </button>
@@ -221,14 +230,15 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
                     onClose();
                   }
                 }}
-                className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                className="p-2.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 active:bg-red-100"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
             )}
+            {/* Desktop close button */}
             <button 
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              className="hidden md:block p-2.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
             >
               <X className="w-5 h-5" />
             </button>
@@ -262,7 +272,7 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-safe">
           {activeTab === 'details' && (
             <div className="space-y-6">
               {/* Amount */}
