@@ -24,6 +24,7 @@ import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
 import { NewDealDialog } from '@/components/crm/new-deal-dialog';
 import { DealFilters } from '@/components/crm/deal-filters';
+import { DealDetailPanel } from '@/components/crm/deal-detail-panel';
 
 interface Deal {
   id: string;
@@ -273,8 +274,6 @@ export default function DealsPage() {
 
   const handleViewDeal = (deal: Deal) => {
     setSelectedDeal(deal);
-    // TODO: Open deal detail modal/page
-    console.log('View deal:', deal.id);
   };
 
   const handleEditDeal = (deal: Deal) => {
@@ -366,7 +365,8 @@ export default function DealsPage() {
           {filteredDeals.map((deal) => (
             <div
               key={deal.id}
-              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow"
+              onClick={() => handleViewDeal(deal)}
+              className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -463,6 +463,17 @@ export default function DealsPage() {
           filters={filters}
           onChange={setFilters}
           onClose={() => setShowFilters(false)}
+        />
+      )}
+
+      {/* Deal Detail Panel */}
+      {selectedDeal && (
+        <DealDetailPanel
+          dealId={selectedDeal.id}
+          onClose={() => setSelectedDeal(null)}
+          onEdit={handleEditDeal}
+          onDelete={handleDeleteDeal}
+          stages={stages}
         />
       )}
 
