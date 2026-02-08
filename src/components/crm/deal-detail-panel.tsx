@@ -16,10 +16,12 @@ import {
   Trash2,
   MessageSquare,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  Send
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { ComposeEmailDialog } from './compose-email-dialog';
 
 interface Deal {
   id: string;
@@ -78,6 +80,7 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'notes'>('details');
+  const [showComposeEmail, setShowComposeEmail] = useState(false);
 
   useEffect(() => {
     loadDeal();
@@ -365,6 +368,15 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
                   {(deal.contact.email || deal.contact.phone) && (
                     <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-3">
                       {deal.contact.email && (
+                        <button 
+                          onClick={() => setShowComposeEmail(true)}
+                          className="flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700 font-medium"
+                        >
+                          <Send className="w-4 h-4" />
+                          Send Email
+                        </button>
+                      )}
+                      {deal.contact.email && (
                         <a 
                           href={`mailto:${deal.contact.email}`}
                           className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-violet-600"
@@ -454,6 +466,21 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
           )}
         </div>
       </div>
+
+      {/* Compose Email Dialog */}
+      {showComposeEmail && deal?.contact?.email && (
+        <ComposeEmailDialog
+          to={deal.contact.email}
+          toName={`${deal.contact.first_name} ${deal.contact.last_name || ''}`}
+          dealId={deal.id}
+          contactId={deal.contact.id}
+          onClose={() => setShowComposeEmail(false)}
+          onSent={() => {
+            // Reload activities to show the sent email
+            loadDeal();
+          }}
+        />
+      )}
     </div>
   );
 }
