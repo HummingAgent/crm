@@ -401,60 +401,78 @@ export default function DealsPage() {
 
   return (
     <div className="min-h-[calc(100vh-12rem)] lg:h-[calc(100vh-theme(spacing.32))] pb-20 lg:pb-0">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 lg:mb-6">
-        <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Deals</h1>
-          <p className="text-sm text-gray-500">
-            {filteredDeals.length} deals · {formatCurrency(filteredDeals.reduce((sum, d) => sum + (d.amount || 0), 0))}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* View Toggle */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white shadow-sm text-violet-600' : 'text-gray-500'
+      {/* Premium Header */}
+      <div className="glass-card rounded-3xl p-6 lg:p-8 border border-white/30 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-gradient-violet mb-2">Sales Pipeline</h1>
+            <div className="flex items-center gap-4">
+              <p className="text-lg text-gray-600 font-medium">
+                {filteredDeals.length} active deals
+              </p>
+              <div className="w-1 h-1 bg-gray-300 rounded-full" />
+              <p className="text-lg font-bold text-gray-900">
+                {formatCurrency(filteredDeals.reduce((sum, d) => sum + (d.amount || 0), 0))} total value
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* Premium View Toggle */}
+            <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-2xl p-1.5 border border-white/30">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl spring-transition ${
+                  viewMode === 'list' 
+                    ? 'bg-white shadow-lg text-violet-600 border border-violet-200' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                }`}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+                <span className="hidden lg:inline">List</span>
+              </button>
+              <button
+                onClick={() => setViewMode('board')}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl spring-transition ${
+                  viewMode === 'board' 
+                    ? 'bg-white shadow-lg text-violet-600 border border-violet-200' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                }`}
+                title="Board view"
+              >
+                <Columns className="w-4 h-4" />
+                <span className="hidden lg:inline">Board</span>
+              </button>
+            </div>
+            
+            {/* Premium Filter Button */}
+            <button 
+              onClick={() => setShowFilters(true)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-2xl border spring-transition touch-feedback ${
+                activeFilterCount > 0 
+                  ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-200 text-violet-700 shadow-lg' 
+                  : 'text-gray-600 bg-white/60 border-white/30 hover:bg-white/80 backdrop-blur-sm'
               }`}
-              title="List view"
             >
-              <List className="w-4 h-4" />
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filter</span>
+              {activeFilterCount > 0 && (
+                <span className="px-2 py-0.5 bg-violet-500 text-white text-xs font-bold rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
-            <button
-              onClick={() => setViewMode('board')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'board' ? 'bg-white shadow-sm text-violet-600' : 'text-gray-500'
-              }`}
-              title="Board view"
+            
+            {/* Premium New Deal Button */}
+            <button 
+              onClick={() => setShowNewDeal(true)}
+              className="hidden sm:flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-2xl shadow-lg shadow-violet-500/25 spring-transition hover:scale-105 touch-feedback"
             >
-              <Columns className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
+              New Deal
             </button>
           </div>
-          <button 
-            onClick={() => setShowFilters(true)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-colors ${
-              activeFilterCount > 0 
-                ? 'bg-violet-50 border-violet-200 text-violet-700' 
-                : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.5 bg-violet-100 text-violet-700 text-xs font-medium rounded">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-          {/* Desktop New Deal button */}
-          <button 
-            onClick={() => setShowNewDeal(true)}
-            className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            New Deal
-          </button>
         </div>
       </div>
 
@@ -635,12 +653,12 @@ export default function DealsPage() {
         />
       )}
 
-      {/* Mobile FAB - Floating Action Button */}
+      {/* Premium Mobile FAB - Floating Action Button */}
       <button
         onClick={() => setShowNewDeal(true)}
-        className="sm:hidden fixed bottom-24 right-4 z-40 w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-full shadow-lg shadow-violet-500/30 flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all active:scale-95"
+        className="sm:hidden fixed bottom-28 right-4 z-40 w-16 h-16 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600 text-white rounded-3xl shadow-2xl shadow-violet-500/40 flex items-center justify-center spring-transition hover:scale-110 active:scale-95 pulse-glow touch-feedback"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-7 h-7" />
       </button>
 
       {/* Confirm Delete All Modal */}

@@ -200,135 +200,236 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-sm text-gray-500 mt-1">Track your sales performance</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {(['30d', '90d', '1y', 'all'] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                timeRange === range
-                  ? 'bg-violet-100 text-violet-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {range === 'all' ? 'All Time' : range === '1y' ? '1 Year' : range}
-            </button>
-          ))}
+      {/* Premium Header */}
+      <div className="glass-card rounded-3xl p-6 lg:p-8 border border-white/30 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-gradient-violet mb-2">Sales Analytics</h1>
+            <p className="text-lg text-gray-600 font-medium">Track your performance and growth metrics</p>
+          </div>
+          
+          {/* Premium Time Range Selector */}
+          <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-2xl p-1.5 border border-white/30">
+            {(['30d', '90d', '1y', 'all'] as const).map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-4 py-3 text-sm font-semibold rounded-xl spring-transition ${
+                  timeRange === range
+                    ? 'bg-white shadow-lg text-violet-600 border border-violet-200'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                }`}
+              >
+                {range === 'all' ? 'All Time' : range === '1y' ? '1 Year' : range}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Top Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-violet-600" />
+      {/* Premium Top Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Open Pipeline */}
+        <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-purple-500/10 group-hover:from-violet-500/10 group-hover:to-purple-500/15 spring-transition" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25 group-hover:scale-105 spring-transition">
+                <DollarSign className="w-7 h-7 text-white" />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl lg:text-4xl font-bold text-gray-900 counter-animation">{formatCurrency(data.totalPipelineValue)}</p>
+              <p className="text-sm text-gray-500 font-medium mt-2">Open Pipeline</p>
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.totalPipelineValue)}</p>
-          <p className="text-sm text-gray-500">Open Pipeline</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <Target className="w-5 h-5 text-green-600" />
+        {/* Won Revenue */}
+        <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/10 group-hover:from-emerald-500/10 group-hover:to-teal-500/15 spring-transition" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25 group-hover:scale-105 spring-transition">
+                <Target className="w-7 h-7 text-white" />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl lg:text-4xl font-bold text-gray-900 counter-animation">{formatCurrency(data.wonValue)}</p>
+              <p className="text-sm text-gray-500 font-medium mt-2">Won Revenue</p>
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.wonValue)}</p>
-          <p className="text-sm text-gray-500">Won Revenue</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+        {/* Win Rate with Circular Progress */}
+        <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/10 group-hover:from-blue-500/10 group-hover:to-cyan-500/15 spring-transition" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 spring-transition">
+                <TrendingUp className="w-7 h-7 text-white" />
+              </div>
+              {/* Win Rate Circle */}
+              <div className="relative w-12 h-12">
+                <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 36 36">
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    className="text-gray-200"
+                  />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    className="text-blue-500"
+                    style={{
+                      strokeDasharray: `${data.winRate * 1.005}, 100`,
+                    }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-bold text-blue-600">{data.winRate.toFixed(0)}%</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl lg:text-4xl font-bold text-gray-900 counter-animation">{data.winRate.toFixed(1)}%</p>
+              <p className="text-sm text-gray-500 font-medium mt-2">Win Rate</p>
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{data.winRate.toFixed(0)}%</p>
-          <p className="text-sm text-gray-500">Win Rate</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-orange-600" />
+        {/* Average Deal Size */}
+        <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/10 group-hover:from-orange-500/10 group-hover:to-red-500/15 spring-transition" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:scale-105 spring-transition">
+                <BarChart3 className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex items-center gap-1 px-3 py-1.5 text-sm text-orange-600 font-semibold bg-orange-50 rounded-full border border-orange-200">
+                <TrendingUp className="w-4 h-4" />
+                +5%
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl lg:text-4xl font-bold text-gray-900 counter-animation">{formatCurrency(data.avgDealSize)}</p>
+              <p className="text-sm text-gray-500 font-medium mt-2">Avg Deal Size</p>
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.avgDealSize)}</p>
-          <p className="text-sm text-gray-500">Avg Deal Size</p>
         </div>
       </div>
 
       {/* Pipeline by Stage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Pipeline by Stage</h2>
-          <div className="space-y-3">
-            {data.dealsByStage.map((item) => (
-              <div key={item.stage} className="flex items-center gap-3">
-                <div 
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: STAGE_COLORS[item.stage] || '#71717a' }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-700 capitalize truncate">
-                      {item.stage.replace(/-/g, ' ')}
-                    </span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {formatCurrency(item.value)}
-                    </span>
+        <div className="glass-card rounded-2xl p-6 border border-white/30">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Pipeline Distribution</h2>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-violet-50 rounded-xl">
+              <PieChart className="w-4 h-4 text-violet-600" />
+              <span className="text-sm font-medium text-violet-700">By Stage</span>
+            </div>
+          </div>
+          <div className="space-y-6">
+            {data.dealsByStage.map((item, index) => {
+              const percentage = ((item.value / data.totalPipelineValue) * 100).toFixed(1);
+              return (
+                <div key={item.stage} className="group">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded-full flex-shrink-0 shadow-sm"
+                        style={{ backgroundColor: STAGE_COLORS[item.stage] || '#71717a' }}
+                      />
+                      <span className="text-sm font-semibold text-gray-700 capitalize">
+                        {item.stage.replace(/-/g, ' ')}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-gray-900">
+                        {formatCurrency(item.value)}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-2">({percentage}%)</span>
+                    </div>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full"
+                      className="absolute inset-y-0 left-0 rounded-full spring-transition group-hover:scale-y-110"
                       style={{ 
                         width: `${(item.value / maxStageValue) * 100}%`,
                         backgroundColor: STAGE_COLORS[item.stage] || '#71717a'
                       }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-xs text-gray-500">{item.count} deals</span>
+                    <span className="text-xs font-medium text-gray-600">{percentage}% of pipeline</span>
                   </div>
                 </div>
-                <span className="text-xs text-gray-500 w-8 text-right">{item.count}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Deals by Source</h2>
+        <div className="glass-card rounded-2xl p-6 border border-white/30">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Lead Sources</h2>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-xl">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-medium text-emerald-700">Performance</span>
+            </div>
+          </div>
           {data.dealsBySource.length > 0 ? (
-            <div className="space-y-3">
-              {data.dealsBySource.map((item) => (
-                <div key={item.source} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <span className="text-xs font-medium text-gray-600">
-                        {item.source.slice(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 capitalize">
-                        {item.source.replace(/-/g, ' ')}
-                      </p>
-                      <p className="text-xs text-gray-500">{item.count} deals</p>
+            <div className="space-y-4">
+              {data.dealsBySource.map((item, index) => {
+                const sourceColors = [
+                  'from-violet-500 to-purple-600',
+                  'from-blue-500 to-cyan-600',
+                  'from-emerald-500 to-teal-600',
+                  'from-orange-500 to-red-500',
+                  'from-pink-500 to-rose-600'
+                ];
+                const colorGradient = sourceColors[index % sourceColors.length];
+                
+                return (
+                  <div key={item.source} className="group p-4 bg-white/50 rounded-2xl border border-white/30 hover:bg-white/70 spring-transition">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${colorGradient} flex items-center justify-center shadow-lg group-hover:scale-105 spring-transition`}>
+                          <span className="text-white font-bold text-lg">
+                            {item.source.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900 capitalize">{item.source.replace(/-/g, ' ')}</p>
+                          <p className="text-sm text-gray-500">{item.count} deals • {((item.count / data.dealsBySource.reduce((sum, s) => sum + s.count, 0)) * 100).toFixed(1)}% of deals</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-gray-900">{formatCurrency(item.value)}</p>
+                        <p className="text-xs text-gray-500">Total value</p>
+                      </div>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {formatCurrency(item.value)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No source data yet</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500">No source data yet</p>
+            </div>
           )}
         </div>
       </div>

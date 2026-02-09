@@ -19,7 +19,8 @@ import {
   Menu,
   X,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Command
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -53,34 +54,41 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
+  const currentTime = new Date().getHours();
+  const getTimeGreeting = () => {
+    if (currentTime < 12) return "Good morning";
+    if (currentTime < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   const NavContent = () => (
     <>
-      {/* Logo - clickable to home */}
-      <div className="flex items-center justify-between px-4 py-4 lg:px-6 lg:py-5 border-b border-gray-100/50">
+      {/* Logo - clickable to home with premium glass effect */}
+      <div className="flex items-center justify-between px-4 py-5 lg:px-6 lg:py-6 border-b border-gray-100/50">
         <Link 
           href="/"
           onClick={() => setSidebarOpen(false)}
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3 group spring-transition"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-all group-hover:scale-105">
-            <Sparkles className="w-5 h-5 text-white" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-lg group-hover:scale-105 lift-card">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="hidden sm:block">
-            <h1 className="font-bold text-gray-900 group-hover:text-violet-600 transition-colors">HummingAgent</h1>
-            <p className="text-xs text-gray-400 font-medium">CRM</p>
+            <h1 className="font-bold text-lg text-gray-900 group-hover:text-gradient-violet spring-transition">HummingAgent</h1>
+            <p className="text-xs text-gray-500 font-medium">Premium CRM</p>
           </div>
         </Link>
         <button 
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+          className="lg:hidden p-2.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 spring-transition"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Main navigation */}
-      <nav className="px-3 py-4 flex-1 overflow-y-auto">
-        <div className="space-y-1">
+      {/* Main navigation with enhanced styling */}
+      <nav className="px-3 py-6 flex-1 overflow-y-auto">
+        <div className="space-y-2">
           {navigation.map((item) => {
             const isActive = pathname === item.href || 
               (item.href !== '/' && pathname.startsWith(item.href));
@@ -90,32 +98,37 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
+                  'group flex items-center justify-between px-4 py-4 rounded-xl text-sm font-medium spring-transition hover:scale-[1.02]',
                   isActive
-                    ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 text-violet-700 shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-violet-500/15 via-purple-500/10 to-fuchsia-500/15 text-violet-700 shadow-violet border border-violet-500/10'
+                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900'
                 )}
               >
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    'p-1.5 rounded-lg transition-colors',
-                    isActive ? 'bg-violet-500/10' : 'group-hover:bg-gray-100'
+                    'p-2 rounded-lg spring-transition',
+                    isActive ? 'bg-violet-500/10 shadow-sm' : 'group-hover:bg-white group-hover:shadow-sm'
                   )}>
-                    <item.icon className={cn('w-4 h-4', isActive ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600')} />
+                    <item.icon className={cn(
+                      'w-4 h-4', 
+                      isActive ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600'
+                    )} />
                   </div>
-                  {item.name}
+                  <span className="font-medium">{item.name}</span>
                 </div>
-                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
+                {isActive && (
+                  <div className="w-2 h-2 rounded-full bg-violet-500 shadow-sm shadow-violet-500/50 pulse-glow" />
+                )}
               </Link>
             );
           })}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-100/70">
-          <p className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        <div className="mt-8 pt-6 border-t border-gray-100/70">
+          <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
             Tools
           </p>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {secondaryNav.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
@@ -124,18 +137,21 @@ export default function DashboardLayout({
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    'group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
+                    'group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium spring-transition hover:scale-[1.02]',
                     isActive
-                      ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 text-violet-700 shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-gradient-to-r from-violet-500/15 to-purple-500/15 text-violet-700 shadow-violet border border-violet-500/10'
+                      : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900'
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <div className={cn(
-                      'p-1.5 rounded-lg transition-colors',
-                      isActive ? 'bg-violet-500/10' : 'group-hover:bg-gray-100'
+                      'p-1.5 rounded-lg spring-transition',
+                      isActive ? 'bg-violet-500/10' : 'group-hover:bg-white group-hover:shadow-sm'
                     )}>
-                      <item.icon className={cn('w-4 h-4', isActive ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600')} />
+                      <item.icon className={cn(
+                        'w-4 h-4', 
+                        isActive ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600'
+                      )} />
                     </div>
                     {item.name}
                   </div>
@@ -147,19 +163,19 @@ export default function DashboardLayout({
         </div>
       </nav>
 
-      {/* User section at bottom */}
-      <div className="p-4 border-t border-gray-100/50 bg-gradient-to-t from-gray-50/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold shadow-md shadow-violet-500/20">
+      {/* Enhanced user section */}
+      <div className="p-4 border-t border-gray-100/50 glass-effect">
+        <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 spring-transition">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-violet-500/20">
             SK
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">Shawn Kercher</p>
-            <p className="text-xs text-gray-500 truncate">Admin</p>
+            <p className="text-sm font-bold text-gray-900 truncate">Shawn Kercher</p>
+            <p className="text-xs text-violet-600 truncate font-medium">Admin</p>
           </div>
           <button 
             onClick={handleLogout}
-            className="p-2.5 text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+            className="p-2.5 text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 spring-transition"
             title="Sign out"
           >
             <LogOut className="w-4 h-4" />
@@ -170,131 +186,166 @@ export default function DashboardLayout({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar backdrop */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Gradient accent line */}
+      <div className="fixed top-0 left-0 right-0 h-1 accent-line z-50" />
+      
+      {/* Mobile sidebar backdrop with enhanced blur */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Mobile sidebar */}
+      {/* Mobile sidebar with glass effect */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:hidden flex flex-col',
+        'fixed inset-y-0 left-0 z-50 w-80 glass-effect border-r border-white/20 transform spring-transition lg:hidden flex flex-col slide-up-bottom safe-area-pl',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <NavContent />
       </aside>
 
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex-col">
+      {/* Desktop sidebar with glass effect */}
+      <aside className="hidden lg:flex lg:fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-white/20 flex-col">
         <NavContent />
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Mobile top bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="flex items-center justify-between px-4 py-3 lg:px-6 lg:py-4">
+      <div className="lg:pl-72">
+        {/* Enhanced mobile header with glass morphism */}
+        <header className="sticky top-1 z-30 glass-effect border-b border-white/20 safe-area-pt">
+          <div className="flex items-center justify-between px-4 py-4 lg:px-6 lg:py-4">
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+              className="lg:hidden p-3 -ml-2 text-gray-500 hover:text-gray-700 rounded-xl hover:bg-white/50 spring-transition touch-feedback"
             >
               <Menu className="w-6 h-6" />
             </button>
 
-            {/* Mobile logo */}
+            {/* Mobile logo with enhanced styling */}
             <div className="lg:hidden flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold">H</span>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-gray-900">CRM</span>
+              <span className="font-bold text-gray-900 text-lg">CRM</span>
             </div>
 
-            {/* Search - hidden on mobile */}
+            {/* Enhanced search with Command-K style */}
             <div className="hidden lg:flex items-center gap-4 flex-1">
               <div className="relative max-w-md flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search deals, contacts..."
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                  className="w-full pl-12 pr-16 py-3 text-sm bg-white/50 border border-white/30 rounded-2xl focus-ring-violet backdrop-blur-sm hover:bg-white/60 spring-transition"
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg">
+                  <Command className="w-3 h-3 text-gray-400" />
+                  <span className="text-xs text-gray-400">K</span>
+                </div>
               </div>
             </div>
 
-            {/* Notifications */}
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-violet-500 rounded-full" />
-            </button>
+            {/* Enhanced notifications with avatar */}
+            <div className="flex items-center gap-3">
+              <button className="relative p-3 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-white/50 spring-transition touch-feedback">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-violet-500 rounded-full shadow-sm pulse-glow" />
+              </button>
+              
+              {/* Avatar on desktop */}
+              <div className="hidden lg:flex items-center gap-2 p-2 rounded-xl hover:bg-white/50 spring-transition cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-medium text-sm shadow-lg shadow-violet-500/25">
+                  SK
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">Shawn</p>
+                  <p className="text-xs text-gray-500">{getTimeGreeting()}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Mobile search - separate row */}
-          <div className="lg:hidden px-4 pb-3">
+          {/* Enhanced mobile search */}
+          <div className="lg:hidden px-4 pb-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                placeholder="Search anything..."
+                className="w-full pl-12 pr-4 py-3 text-sm bg-white/50 border border-white/30 rounded-2xl focus-ring-violet backdrop-blur-sm"
               />
             </div>
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="p-4 lg:p-6">
-          {children}
+        {/* Page content with enhanced spacing */}
+        <main className="p-4 lg:p-8 min-h-screen">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
 
-        {/* Mobile bottom navigation */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 safe-area-pb">
-          <div className="flex items-center justify-around">
-            {[
-              { name: 'Home', href: '/', icon: LayoutDashboard },
-              { name: 'Deals', href: '/deals', icon: Kanban },
-              { name: 'Contacts', href: '/contacts', icon: Users },
-              { name: 'Calendar', href: '/calendar', icon: Calendar },
-              { name: 'More', href: '#', icon: Menu, action: () => setSidebarOpen(true) },
-            ].map((item) => {
-              const isActive = item.href === '#' ? false : 
-                (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
-              
-              if (item.action) {
+        {/* Premium floating bottom navigation */}
+        <nav className="lg:hidden fixed bottom-4 left-4 right-4 z-40 safe-area-pb">
+          <div className="glass-effect rounded-3xl px-2 py-3 shadow-2xl border border-white/30">
+            <div className="flex items-center justify-around">
+              {[
+                { name: 'Home', href: '/', icon: LayoutDashboard },
+                { name: 'Deals', href: '/deals', icon: Kanban },
+                { name: 'Contacts', href: '/contacts', icon: Users },
+                { name: 'Calendar', href: '/calendar', icon: Calendar },
+                { name: 'More', href: '#', icon: Menu, action: () => setSidebarOpen(true) },
+              ].map((item) => {
+                const isActive = item.href === '#' ? false : 
+                  (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
+                
+                if (item.action) {
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={item.action}
+                      className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl text-gray-400 hover:text-gray-600 spring-transition touch-feedback"
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-xs font-medium">{item.name}</span>
+                    </button>
+                  );
+                }
+                
                 return (
-                  <button
+                  <Link
                     key={item.name}
-                    onClick={item.action}
-                    className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-gray-400"
+                    href={item.href}
+                    className={cn(
+                      'flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl spring-transition touch-feedback relative',
+                      isActive 
+                        ? 'text-violet-600 bg-violet-500/10' 
+                        : 'text-gray-400 hover:text-gray-600'
+                    )}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span className="text-xs">{item.name}</span>
-                  </button>
+                    {isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-purple-500/10 rounded-2xl border border-violet-500/20" />
+                    )}
+                    <item.icon className={cn(
+                      'w-5 h-5 relative z-10', 
+                      isActive && 'text-violet-600'
+                    )} />
+                    <span className="text-xs font-medium relative z-10">{item.name}</span>
+                    {isActive && (
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-violet-500 rounded-full shadow-sm pulse-glow" />
+                    )}
+                  </Link>
                 );
-              }
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex flex-col items-center gap-1 px-3 py-2 rounded-lg',
-                    isActive ? 'text-violet-600' : 'text-gray-400'
-                  )}
-                >
-                  <item.icon className={cn('w-5 h-5', isActive && 'text-violet-600')} />
-                  <span className="text-xs">{item.name}</span>
-                </Link>
-              );
-            })}
+              })}
+            </div>
           </div>
         </nav>
 
-        {/* Spacer for bottom nav on mobile */}
-        <div className="lg:hidden h-20" />
+        {/* Enhanced spacer for bottom nav */}
+        <div className="lg:hidden h-24 safe-area-pb" />
       </div>
     </div>
   );
