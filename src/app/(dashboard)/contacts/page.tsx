@@ -17,6 +17,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { NewContactDialog } from '@/components/crm/new-contact-dialog';
 import { ContactDetailPanel } from '@/components/crm/contact-detail-panel';
+import { EditContactDialog } from '@/components/crm/edit-contact-dialog';
 
 interface Contact {
   id: string;
@@ -44,6 +45,7 @@ export default function ContactsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewContact, setShowNewContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [sortField, setSortField] = useState<'name' | 'company' | 'created_at'>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -418,6 +420,22 @@ export default function ContactsPage() {
           onDeleted={() => {
             setContacts(prev => prev.filter(c => c.id !== selectedContact.id));
             setSelectedContact(null);
+          }}
+          onEdit={(contact) => setEditingContact(contact)}
+        />
+      )}
+
+      {/* Edit Contact Dialog */}
+      {editingContact && (
+        <EditContactDialog
+          contact={editingContact}
+          onClose={() => setEditingContact(null)}
+          onUpdated={(updated) => {
+            setContacts(prev => prev.map(c => c.id === updated.id ? updated : c));
+            if (selectedContact?.id === updated.id) {
+              setSelectedContact(updated);
+            }
+            setEditingContact(null);
           }}
         />
       )}

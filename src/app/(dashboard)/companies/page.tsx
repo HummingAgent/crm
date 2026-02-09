@@ -16,6 +16,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { NewCompanyDialog } from '@/components/crm/new-company-dialog';
 import { CompanyDetailPanel } from '@/components/crm/company-detail-panel';
+import { EditCompanyDialog } from '@/components/crm/edit-company-dialog';
 
 interface Company {
   id: string;
@@ -40,6 +41,7 @@ export default function CompaniesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewCompany, setShowNewCompany] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
   useEffect(() => {
     loadCompanies();
@@ -313,6 +315,21 @@ export default function CompaniesPage() {
           onDeleted={() => {
             setCompanies(prev => prev.filter(c => c.id !== selectedCompany.id));
             setSelectedCompany(null);
+          }}
+          onEdit={(company) => setEditingCompany(company)}
+        />
+      )}
+
+      {editingCompany && (
+        <EditCompanyDialog
+          company={editingCompany}
+          onClose={() => setEditingCompany(null)}
+          onUpdated={(updated) => {
+            setCompanies(prev => prev.map(c => c.id === updated.id ? { ...updated, contacts_count: c.contacts_count, deals_count: c.deals_count, total_deal_value: c.total_deal_value } : c));
+            if (selectedCompany?.id === updated.id) {
+              setSelectedCompany({ ...selectedCompany, ...updated });
+            }
+            setEditingCompany(null);
           }}
         />
       )}

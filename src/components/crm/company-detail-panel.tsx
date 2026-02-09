@@ -10,6 +10,7 @@ import {
   Linkedin,
   ExternalLink,
   Trash2,
+  Edit2,
   DollarSign,
   User,
   Phone,
@@ -51,9 +52,10 @@ interface CompanyDetailPanelProps {
   onClose: () => void;
   onUpdated: (company: Company) => void;
   onDeleted: () => void;
+  onEdit?: (company: Company) => void;
 }
 
-export function CompanyDetailPanel({ company, onClose, onUpdated, onDeleted }: CompanyDetailPanelProps) {
+export function CompanyDetailPanel({ company, onClose, onUpdated, onDeleted, onEdit }: CompanyDetailPanelProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,14 @@ export function CompanyDetailPanel({ company, onClose, onUpdated, onDeleted }: C
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Company Details</h2>
         <div className="flex items-center gap-2">
+          {onEdit && (
+            <button 
+              onClick={() => onEdit(company)}
+              className="p-2 text-gray-400 hover:text-violet-600 rounded-lg hover:bg-violet-50"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
           <button 
             onClick={handleDelete}
             disabled={deleting}

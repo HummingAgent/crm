@@ -58,9 +58,10 @@ interface ContactDetailPanelProps {
   onClose: () => void;
   onUpdated: (contact: Contact) => void;
   onDeleted: () => void;
+  onEdit?: (contact: Contact) => void;
 }
 
-export function ContactDetailPanel({ contact, onClose, onUpdated, onDeleted }: ContactDetailPanelProps) {
+export function ContactDetailPanel({ contact, onClose, onUpdated, onDeleted, onEdit }: ContactDetailPanelProps) {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +156,14 @@ export function ContactDetailPanel({ contact, onClose, onUpdated, onDeleted }: C
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Contact Details</h2>
         <div className="flex items-center gap-2">
+          {onEdit && (
+            <button 
+              onClick={() => onEdit(contact)}
+              className="p-2 text-gray-400 hover:text-violet-600 rounded-lg hover:bg-violet-50"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
           <button 
             onClick={handleDelete}
             disabled={deleting}
