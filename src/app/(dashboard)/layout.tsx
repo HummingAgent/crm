@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { GlobalSearch } from '@/components/crm/global-search';
+import { AIChatWidget } from '@/components/crm/ai-chat';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -363,6 +364,9 @@ export default function DashboardLayout({
 
         {/* Enhanced spacer for bottom nav */}
         <div className="lg:hidden h-24 safe-area-pb" />
+
+        {/* AI Chat Widget */}
+        <AIChatWidget />
       </div>
     </div>
   );
