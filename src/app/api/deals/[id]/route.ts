@@ -60,7 +60,8 @@ export async function PATCH(
     const updates: Record<string, any> = {};
     const allowedFields = [
       'name', 'description', 'stage', 'amount', 'expected_close_date',
-      'company_id', 'primary_contact_id', 'priority', 'lead_source'
+      'company_id', 'primary_contact_id', 'priority', 'lead_source',
+      'next_action', 'next_action_date', 'next_action_type', 'outcome', 'outcome_reason'
     ];
 
     for (const field of allowedFields) {

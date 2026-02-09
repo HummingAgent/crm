@@ -26,6 +26,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { ComposeEmailDialog } from './compose-email-dialog';
+import { ScheduleNextAction } from './schedule-next-action';
 
 interface Deal {
   id: string;
@@ -97,6 +98,7 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'notes'>('details');
   const [showComposeEmail, setShowComposeEmail] = useState(false);
+  const [showScheduleAction, setShowScheduleAction] = useState(false);
 
   useEffect(() => {
     loadDeal();
@@ -562,6 +564,30 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
 
           {activeTab === 'notes' && (
             <div className="space-y-4">
+              {/* Schedule Next Action */}
+              {!showScheduleAction && (
+                <button
+                  onClick={() => setShowScheduleAction(true)}
+                  className="w-full p-3 text-sm font-medium text-violet-600 border border-violet-200 border-dashed rounded-xl hover:bg-violet-50 transition-colors"
+                >
+                  📅 Schedule Next Action
+                </button>
+              )}
+              {showScheduleAction && (
+                <ScheduleNextAction
+                  dealId={dealId}
+                  dealName={deal?.name || ''}
+                  currentAction={deal?.next_step}
+                  currentDate={deal?.next_activity_date}
+                  compact
+                  onSaved={() => {
+                    setShowScheduleAction(false);
+                    loadDeal();
+                  }}
+                  onClose={() => setShowScheduleAction(false)}
+                />
+              )}
+
               {activities.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-300" />

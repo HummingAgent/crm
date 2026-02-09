@@ -10,11 +10,28 @@ import {
   Target,
   Clock,
   ArrowRight,
-  Calendar,
+  Calendar as CalendarIcon,
   BarChart3,
   PieChart
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+interface WeeklyMovement {
+  id: string;
+  name: string;
+  stageFrom: string;
+  stageTo: string;
+  date: string;
+}
+
+interface StuckDeal {
+  id: string;
+  name: string;
+  stage: string;
+  amount: number;
+  daysSinceActivity: number;
+  company?: string;
+}
 
 interface AnalyticsData {
   // Pipeline metrics
@@ -44,6 +61,12 @@ interface AnalyticsData {
   
   // Recent wins
   recentWins: { id: string; name: string; amount: number; company: string; closedAt: string }[];
+
+  // Pipeline review enhancements
+  weeklyMovements: WeeklyMovement[];
+  stuckDeals: StuckDeal[];
+  revenueForecast: number;
+  forecastByStage: { stage: string; value: number; weight: number; weighted: number }[];
 }
 
 const STAGE_COLORS: Record<string, string> = {
@@ -79,10 +102,14 @@ export default function AnalyticsPage() {
     }
 
     // Load all data
-    const [dealsRes, contactsRes, companiesRes] = await Promise.all([
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [dealsRes, contactsRes, companiesRes, stageChangesRes] = await Promise.all([
       supabase.from('crm_deals').select('*'),
       supabase.from('crm_contacts').select('id, created_at', { count: 'exact' }),
       supabase.from('crm_companies').select('id, created_at', { count: 'exact' }),
+      supabase.from('crm_activities').select('deal_id, stage_from, stage_to, subject, created_at').eq('type', 'stage-change').gte('created_at', oneWeekAgo.toISOString()).order('created_at', { ascending: false }),
     ]);
 
     const deals = dealsRes.data || [];
@@ -150,6 +177,59 @@ export default function AnalyticsPage() {
         closedAt: d.closed_at || d.updated_at,
       }));
 
+    // Weekly movements
+    const weeklyMovements: WeeklyMovement[] = (stageChangesRes.data || []).map(a => ({
+      id: a.deal_id,
+      name: a.subject || '',
+      stageFrom: a.stage_from || '',
+      stageTo: a.stage_to || '',
+      date: a.created_at,
+    }));
+
+    // Stuck deals (open deals with no activity in 5+ days)
+    const now = new Date();
+    const stuckDeals: StuckDeal[] = openDeals
+      .map(d => {
+        const lastActivity = d.last_activity_at || d.created_at;
+        const daysSince = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          id: d.id,
+          name: d.name,
+          stage: d.stage,
+          amount: d.amount || 0,
+          daysSinceActivity: daysSince,
+          company: d.company_id,
+        };
+      })
+      .filter(d => d.daysSinceActivity >= 5)
+      .sort((a, b) => b.daysSinceActivity - a.daysSinceActivity)
+      .slice(0, 10);
+
+    // Revenue forecast (weighted by stage)
+    const stageWeights: Record<string, number> = {
+      'new-lead': 0.10,
+      'discovery-scheduled': 0.25,
+      'discovery-complete': 0.25,
+      'proposal-draft': 0.50,
+      'proposal-sent': 0.50,
+      'contract-sent': 0.75,
+    };
+
+    const forecastByStage = Object.entries(stageMap)
+      .filter(([stage]) => !['closed-won', 'closed-lost', 'current-customer', 'dead', 'dead-deals'].includes(stage))
+      .map(([stage, data]) => {
+        const weight = stageWeights[stage] || 0.10;
+        return {
+          stage,
+          value: data.value,
+          weight,
+          weighted: data.value * weight,
+        };
+      })
+      .sort((a, b) => b.weighted - a.weighted);
+
+    const revenueForecast = forecastByStage.reduce((sum, s) => sum + s.weighted, 0);
+
     setData({
       totalPipelineValue,
       wonValue,
@@ -161,12 +241,16 @@ export default function AnalyticsPage() {
       avgDealSize,
       dealsByStage,
       dealsBySource,
-      avgDaysToClose: 0, // TODO: Calculate from actual close dates
+      avgDaysToClose: 0,
       totalContacts: contactsRes.count || 0,
       totalCompanies: companiesRes.count || 0,
       newContactsThisMonth,
       newCompaniesThisMonth,
       recentWins,
+      weeklyMovements,
+      stuckDeals,
+      revenueForecast,
+      forecastByStage,
     });
 
     setLoading(false);
@@ -504,6 +588,118 @@ export default function AnalyticsPage() {
           </div>
         </div>
       )}
+
+      {/* Revenue Forecast */}
+      <div className="glass-card rounded-2xl p-6 border border-white/30">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">💰 Revenue Forecast</h2>
+          <div className="text-right">
+            <p className="text-3xl font-bold text-gradient-violet">{formatCurrency(data.revenueForecast)}</p>
+            <p className="text-xs text-gray-500">Weighted pipeline</p>
+          </div>
+        </div>
+        {data.forecastByStage.length > 0 ? (
+          <div className="space-y-3">
+            {data.forecastByStage.map((item) => (
+              <div key={item.stage} className="flex items-center justify-between p-3 bg-white/50 rounded-xl border border-white/30">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: STAGE_COLORS[item.stage] || '#71717a' }}
+                  />
+                  <span className="text-sm font-medium text-gray-700 capitalize">
+                    {item.stage.replace(/-/g, ' ')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-gray-500">{formatCurrency(item.value)}</span>
+                  <span className="text-gray-400">×</span>
+                  <span className="font-medium text-gray-600">{Math.round(item.weight * 100)}%</span>
+                  <span className="text-gray-400">=</span>
+                  <span className="font-bold text-gray-900">{formatCurrency(item.weighted)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 text-center py-4">No open deals to forecast</p>
+        )}
+      </div>
+
+      {/* Weekly Movement + Stuck Deals */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Weekly Movement */}
+        <div className="glass-card rounded-2xl p-6 border border-white/30">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">📈 Weekly Movement</h2>
+          {data.weeklyMovements.length > 0 ? (
+            <div className="space-y-3">
+              {data.weeklyMovements.slice(0, 10).map((m, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-white/50 rounded-xl">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: STAGE_COLORS[m.stageFrom] || '#71717a' }}
+                      >
+                        {m.stageFrom.replace(/-/g, ' ')}
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-gray-400" />
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: STAGE_COLORS[m.stageTo] || '#71717a' }}
+                      >
+                        {m.stageTo.replace(/-/g, ' ')}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">No stage changes this week</p>
+            </div>
+          )}
+        </div>
+
+        {/* Stuck Deals */}
+        <div className="glass-card rounded-2xl p-6 border border-white/30">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">🚨 Stuck Deals</h2>
+          {data.stuckDeals.length > 0 ? (
+            <div className="space-y-3">
+              {data.stuckDeals.map((deal) => (
+                <div key={deal.id} className="flex items-center justify-between p-3 bg-red-50/50 rounded-xl border border-red-100">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{deal.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: STAGE_COLORS[deal.stage] || '#71717a' }}
+                      >
+                        {deal.stage.replace(/-/g, ' ')}
+                      </span>
+                      {deal.amount > 0 && (
+                        <span className="text-xs text-gray-500">{formatCurrency(deal.amount)}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-red-600 whitespace-nowrap">
+                    {deal.daysSinceActivity}d idle
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">✅ No stuck deals — great work!</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

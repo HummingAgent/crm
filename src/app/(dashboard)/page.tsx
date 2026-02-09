@@ -18,6 +18,25 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
+interface DueTodayDeal {
+  id: string;
+  name: string;
+  next_action: string | null;
+  next_action_type: string | null;
+  next_action_date: string | null;
+  amount: number | null;
+  company: any;
+}
+
+interface UntouchedContact {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  email: string | null;
+  company: any;
+  created_at: string;
+}
+
 interface DashboardStats {
   totalDeals: number;
   totalValue: number;
@@ -27,6 +46,8 @@ interface DashboardStats {
   companiesCount: number;
   dealsByStage: Record<string, { count: number; value: number }>;
   recentActivities: any[];
+  dueTodayDeals: DueTodayDeal[];
+  untouchedContacts: UntouchedContact[];
 }
 
 export default function DashboardPage() {
@@ -40,11 +61,16 @@ export default function DashboardPage() {
   const loadStats = async () => {
     const supabase = createClient();
 
-    const [dealsRes, contactsRes, companiesRes, activitiesRes] = await Promise.all([
+    const today = new Date().toISOString().split('T')[0];
+
+    const [dealsRes, contactsRes, companiesRes, activitiesRes, dueTodayRes, allContactsRes, dealContactsRes] = await Promise.all([
       supabase.from('crm_deals').select('*'),
       supabase.from('crm_contacts').select('id', { count: 'exact', head: true }),
       supabase.from('crm_companies').select('id', { count: 'exact', head: true }),
       supabase.from('crm_activities').select('*').order('created_at', { ascending: false }).limit(10),
+      supabase.from('crm_deals').select('id, name, next_action, next_action_type, next_action_date, amount, company:crm_companies(name)').lte('next_action_date', today).not('next_action_date', 'is', null).not('stage', 'in', '("closed-won","closed-lost","current-customer","dead","dead-deals")').order('next_action_date').limit(10),
+      supabase.from('crm_contacts').select('id, first_name, last_name, email, created_at, company:crm_companies(name)').order('created_at', { ascending: false }).limit(100),
+      supabase.from('crm_deals').select('primary_contact_id'),
     ]);
 
     const deals = dealsRes.data || [];
@@ -65,6 +91,14 @@ export default function DashboardPage() {
       dealsByStage[deal.stage].value += deal.amount || 0;
     });
 
+    // Find untouched contacts (not linked to any deal)
+    const contactIdsWithDeals = new Set(
+      (dealContactsRes.data || []).map(d => d.primary_contact_id).filter(Boolean)
+    );
+    const untouchedContacts = (allContactsRes.data || [])
+      .filter(c => !contactIdsWithDeals.has(c.id))
+      .slice(0, 5);
+
     setStats({
       totalDeals: deals.length,
       totalValue,
@@ -74,6 +108,8 @@ export default function DashboardPage() {
       companiesCount: companiesRes.count || 0,
       dealsByStage,
       recentActivities: activitiesRes.data || [],
+      dueTodayDeals: (dueTodayRes.data || []) as DueTodayDeal[],
+      untouchedContacts: untouchedContacts as UntouchedContact[],
     });
 
     setLoading(false);
@@ -323,6 +359,102 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Due Today + Untouched Contacts */}
+      {((stats?.dueTodayDeals && stats.dueTodayDeals.length > 0) || (stats?.untouchedContacts && stats.untouchedContacts.length > 0)) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
+          {/* Due Today */}
+          {stats?.dueTodayDeals && stats.dueTodayDeals.length > 0 && (
+            <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
+                    <Clock className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Due Today</h2>
+                </div>
+                <span className="text-sm font-semibold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+                  {stats.dueTodayDeals.length}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {stats.dueTodayDeals.map((deal) => {
+                  const typeIcons: Record<string, string> = { call: '📞', email: '✉️', meeting: '📹', demo: '🖥️' };
+                  const icon = typeIcons[deal.next_action_type || ''] || '📋';
+                  const isOverdue = deal.next_action_date && deal.next_action_date < new Date().toISOString().split('T')[0];
+                  return (
+                    <Link
+                      key={deal.id}
+                      href="/deals"
+                      className={`flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 spring-transition border ${isOverdue ? 'border-red-200 bg-red-50/50' : 'border-transparent'}`}
+                    >
+                      <span className="text-lg">{icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{deal.name}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {deal.next_action || 'Follow up'}
+                          {(deal.company as any)?.name ? ` • ${(deal.company as any).name}` : ''}
+                        </p>
+                      </div>
+                      {deal.amount && (
+                        <span className="text-xs font-bold text-gray-600">{formatCurrency(deal.amount)}</span>
+                      )}
+                      {isOverdue && (
+                        <span className="text-xs font-semibold text-red-600">Overdue</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Untouched Contacts */}
+          {stats?.untouchedContacts && stats.untouchedContacts.length > 0 && (
+            <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center shadow-lg shadow-gray-500/25">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Untouched Contacts</h2>
+                </div>
+                <Link
+                  href="/contacts"
+                  className="text-sm text-violet-600 hover:text-violet-700 font-semibold"
+                >
+                  View all
+                </Link>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Contacts not linked to any deal</p>
+              <div className="space-y-3">
+                {stats.untouchedContacts.map((contact) => (
+                  <Link
+                    key={contact.id}
+                    href="/contacts"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 spring-transition"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm flex-shrink-0">
+                      {contact.first_name[0]}{contact.last_name?.[0] || ''}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {contact.first_name} {contact.last_name}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {contact.email || (contact.company as any)?.name || 'No details'}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {new Date(contact.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Premium Recent Activity */}
       <div className="glass-card rounded-2xl p-6 lg:p-8 border border-white/30">
