@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { GlobalSearch } from '@/components/crm/global-search';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -47,6 +48,19 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
+  // Cmd+K / Ctrl+K keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -234,18 +248,17 @@ export default function DashboardLayout({
 
             {/* Enhanced search with Command-K style */}
             <div className="hidden lg:flex items-center gap-4 flex-1">
-              <div className="relative max-w-md flex-1">
+              <button 
+                onClick={() => setShowSearch(true)}
+                className="relative max-w-md flex-1 flex items-center gap-3 pl-12 pr-16 py-3 text-sm text-gray-400 bg-white/50 border border-white/30 rounded-2xl hover:bg-white/60 spring-transition text-left"
+              >
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search deals, contacts..."
-                  className="w-full pl-12 pr-16 py-3 text-sm bg-white/50 border border-white/30 rounded-2xl focus-ring-violet backdrop-blur-sm hover:bg-white/60 spring-transition"
-                />
+                Search deals, contacts...
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg">
                   <Command className="w-3 h-3 text-gray-400" />
                   <span className="text-xs text-gray-400">K</span>
                 </div>
-              </div>
+              </button>
             </div>
 
             {/* Enhanced notifications with avatar */}
@@ -270,16 +283,20 @@ export default function DashboardLayout({
 
           {/* Enhanced mobile search */}
           <div className="lg:hidden px-4 pb-4">
-            <div className="relative">
+            <button
+              onClick={() => setShowSearch(true)}
+              className="relative w-full flex items-center gap-3 pl-12 pr-4 py-3 text-sm text-gray-400 bg-white/50 border border-white/30 rounded-2xl backdrop-blur-sm text-left"
+            >
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search anything..."
-                className="w-full pl-12 pr-4 py-3 text-sm bg-white/50 border border-white/30 rounded-2xl focus-ring-violet backdrop-blur-sm"
-              />
-            </div>
+              Search anything...
+            </button>
           </div>
         </header>
+
+        {/* Global Search Modal */}
+        {showSearch && (
+          <GlobalSearch onClose={() => setShowSearch(false)} />
+        )}
 
         {/* Page content with enhanced spacing */}
         <main className="p-4 lg:p-8 min-h-screen">
