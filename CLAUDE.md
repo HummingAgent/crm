@@ -25,7 +25,7 @@
 | Database | **Supabase** (PostgreSQL + Auth + RLS) |
 | Auth | **Supabase Auth** (Google OAuth via middleware) |
 | Drag & Drop | **DnD Kit** (kanban board) |
-| AI Chat | **OpenAI** (GPT-4o-mini, pipeline Q&A) |
+| AI Chat | **Azure OpenAI Foundry** (GPT-5.2, pipeline Q&A) |
 | Email | **Resend** (outbound) + ingest API (inbound) |
 | Notifications | **Slack** (webhooks + slash commands) |
 | Icons | **Lucide** |
@@ -172,7 +172,7 @@ RLS is enabled on all tables but currently uses permissive "allow all" policies.
 | `/api/deals/[id]` | GET, PATCH, DELETE | Single deal CRUD + stage change logging |
 | `/api/contacts` | GET, POST | List/create contacts |
 | `/api/companies` | GET, POST | List/create companies |
-| `/api/ai/chat` | POST | AI chat — fetches full CRM context, sends to GPT-4o-mini |
+| `/api/ai/chat` | POST | AI chat — fetches full CRM context, sends to Azure OpenAI (GPT-5.2) |
 | `/api/emails/send` | POST | Send email via Resend, logs activity on deal |
 | `/api/emails/ingest` | GET, POST | Receive emails from external agents, auto-match to contacts/deals |
 | `/api/notifications/slack` | POST | Send formatted Slack notifications (deal events) |
@@ -206,7 +206,7 @@ The AI chat (`/api/ai/chat`) loads the **entire CRM state** as context:
 - Recent contacts (top 50)
 - All companies
 
-Uses GPT-4o-mini with a system prompt that includes all this data. Answers questions about pipeline, deals, contacts, and provides sales insights.
+Uses **Azure OpenAI Foundry** (GPT-5.2) via `@ai-sdk/azure`. The endpoint is HummingAgent's shared Azure Foundry instance (`humming-agent-foundry-dev`). Answers questions about pipeline, deals, contacts, and provides sales insights.
 
 ---
 
@@ -232,7 +232,10 @@ Uses GPT-4o-mini with a system prompt that includes all this data. Answers quest
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role (API routes) |
-| `OPENAI_API_KEY` | Optional | AI chat assistant |
+| `AZURE_OPENAI_API_KEY` | ✅ | Azure Foundry API key |
+| `AZURE_OPENAI_ENDPOINT` | ✅ | Azure Foundry endpoint URL |
+| `AZURE_OPENAI_DEPLOYMENT` | ✅ | Model deployment name (gpt-5.2) |
+| `AZURE_OPENAI_API_VERSION` | Optional | API version (default: 2025-04-01-preview) |
 | `RESEND_API_KEY` | Optional | Outbound email |
 | `SLACK_WEBHOOK_URL` | Optional | Slack notifications + digest |
 | `CRM_API_KEY` | Optional | Auth for email ingest API |
