@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { createAzure } from '@ai-sdk/azure';
+import { generateText } from 'ai';
 import { createClient } from '@supabase/supabase-js';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Azure OpenAI configuration
+const rawEndpoint = process.env.AZURE_OPENAI_ENDPOINT ?? "";
+const resourceBase = rawEndpoint.replace(/\/openai\/.*$/, "");
+
+const azure = createAzure({
+  baseURL: `${resourceBase}/openai`,
+  apiKey: process.env.AZURE_OPENAI_API_KEY,
+  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? "2025-04-01-preview",
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,18 +99,21 @@ If asked about something not in the data, say so clearly.
 
 ${crmContext}`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-5.2',
-      messages: [
-        { role: 'system', content: systemMessage },
-        ...messages,
-      ],
-      max_tokens: 1000,
+    const model = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-5.2";
+
+    const { text } = await generateText({
+      model: azure.chat(model),
+      system: systemMessage,
+      messages: messages.map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+      maxTokens: 1000,
       temperature: 0.7,
     });
 
     return NextResponse.json({
-      message: completion.choices[0].message.content,
+      message: text,
     });
   } catch (error: any) {
     console.error('AI chat error:', error);
