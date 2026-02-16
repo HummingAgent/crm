@@ -73,12 +73,14 @@ export async function POST(request: Request) {
         last_name: body.last_name,
         email: body.email,
         phone: body.phone,
-        title: body.title,
+        mobile: body.mobile,
+        job_title: body.job_title || body.title, // Support both for backwards compat
+        department: body.department,
         company_id: body.company_id,
         linkedin_url: body.linkedin_url,
-        location: body.location,
-        lead_status: body.lead_status || 'new',
-        notes: body.notes,
+        twitter_handle: body.twitter_handle,
+        status: body.status || 'active',
+        lead_source: body.lead_source,
       })
       .select(`
         *,
