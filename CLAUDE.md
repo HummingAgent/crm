@@ -28,6 +28,7 @@
 | AI Chat | **Azure OpenAI Foundry** (GPT-5.2, pipeline Q&A) |
 | Email | **Resend** (outbound) + ingest API (inbound) |
 | Notifications | **Slack** (webhooks + slash commands) |
+| Calendar | **Google Calendar API** (OAuth, team view) |
 | Icons | **Lucide** |
 | Deployment | **Vercel** |
 
@@ -102,7 +103,8 @@ crm/
 │   └── cleanup.sql                       # Schema reset script
 │
 ├── migrations/
-│   └── 001_stale_deals_and_outcomes.sql  # Stale deal tracking + settings table
+│   ├── 001_stale_deals_and_outcomes.sql  # Stale deal tracking + settings table
+│   └── 002_google_calendar_integration.sql # Team calendar tables
 │
 ├── scripts/
 │   ├── import-hubspot.js                 # Import deals from HubSpot CSV
@@ -136,6 +138,9 @@ All tables prefixed with `crm_` (shared Supabase instance). Schema in `supabase/
 | `crm_deal_products` | Line items on deals |
 | `crm_pipeline_stages` | Customizable pipeline stages (11 default stages) |
 | `crm_settings` | Key-value settings (stale thresholds, Slack webhook, digest time) |
+| `crm_team_members` | Team members (name, email, calendar color) |
+| `crm_calendar_connections` | Google Calendar OAuth tokens per team member |
+| `crm_calendar_events` | Cached events from connected Google Calendars |
 
 ### Pipeline Stages (default)
 ```
@@ -180,6 +185,10 @@ RLS is enabled on all tables but currently uses permissive "allow all" policies.
 | `/api/digest` | POST | Generate daily digest (overdue, stale, today's actions) → Slack |
 | `/api/cron/digest` | GET | Cron trigger for daily digest (Vercel cron) |
 | `/api/settings` | GET, POST | CRM settings (stale thresholds, etc.) |
+| `/api/calendar/auth` | GET | Start Google Calendar OAuth flow |
+| `/api/calendar/callback` | GET | Google OAuth callback, stores tokens |
+| `/api/calendar/events` | GET | Fetch events from all connected Google Calendars |
+| `/api/calendar/team` | GET, POST | List/add team members for calendar |
 
 ### Email Ingest API
 External agents can push emails into the CRM:
@@ -222,6 +231,7 @@ Uses **Azure OpenAI Foundry** (GPT-5.2) via `@ai-sdk/azure`. The endpoint is Hum
 8. **Activity Timeline** — Unified log (emails, calls, meetings, notes, stage changes)
 9. **HubSpot Migration** — Import scripts for deals and contacts from CSV exports
 10. **Mobile-First Design** — Glass morphism UI, bottom sheets, swipe gestures
+11. **Team Calendar** — Google Calendar integration, see everyone's calendar in one view
 
 ---
 
@@ -241,6 +251,8 @@ Uses **Azure OpenAI Foundry** (GPT-5.2) via `@ai-sdk/azure`. The endpoint is Hum
 | `CRM_API_KEY` | Optional | Auth for email ingest API |
 | `CRON_SECRET` | Optional | Vercel cron auth |
 | `NEXT_PUBLIC_APP_URL` | Optional | App URL for internal API calls |
+| `GOOGLE_CALENDAR_CLIENT_ID` | Optional | Google OAuth client ID (for calendar) |
+| `GOOGLE_CALENDAR_CLIENT_SECRET` | Optional | Google OAuth client secret (for calendar) |
 
 ---
 
