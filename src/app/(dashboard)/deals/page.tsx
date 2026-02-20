@@ -34,6 +34,14 @@ import { DealDetailPanel } from '@/components/crm/deal-detail-panel';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
 
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
+  avatar_url: string | null;
+}
+
 interface Deal {
   id: string;
   name: string;
@@ -43,6 +51,7 @@ interface Deal {
   expected_close_date: string | null;
   company_id: string | null;
   primary_contact_id: string | null;
+  owner_id: string | null;
   priority: string;
   lead_source: string | null;
   deal_type: string | null;
@@ -58,6 +67,7 @@ interface Deal {
     last_name: string | null;
     email: string | null;
   };
+  owner?: TeamMember;
 }
 
 interface PipelineStage {
@@ -85,6 +95,7 @@ interface Filters {
   sources: string[];
   minAmount: number | null;
   maxAmount: number | null;
+  ownerId: string | null;
 }
 
 const emptyFilters: Filters = {
@@ -93,11 +104,15 @@ const emptyFilters: Filters = {
   sources: [],
   minAmount: null,
   maxAmount: null,
+  ownerId: null,
 };
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [stages, setStages] = useState<PipelineStage[]>(DEFAULT_STAGES);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [myPipelineOnly, setMyPipelineOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [showNewDeal, setShowNewDeal] = useState(false);
@@ -168,13 +183,14 @@ export default function DealsPage() {
   const loadData = async () => {
     const supabase = createClient();
     
-    // Load deals with company and contact info
+    // Load deals with company, contact, and owner info
     const { data: dealsData, error: dealsError } = await supabase
       .from('crm_deals')
       .select(`
         *,
         company:crm_companies(id, name, logo_url),
-        contact:crm_contacts(id, first_name, last_name, email)
+        contact:crm_contacts(id, first_name, last_name, email),
+        owner:crm_team_members(id, name, email, color, avatar_url)
       `)
       .order('created_at', { ascending: false });
 
@@ -184,8 +200,25 @@ export default function DealsPage() {
       .select('*')
       .order('position');
 
+    // Load team members
+    const { data: teamData } = await supabase
+      .from('crm_team_members')
+      .select('id, name, email, color, avatar_url')
+      .eq('is_active', true)
+      .order('name');
+
+    // Get current user's email and match to team member
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && teamData) {
+      const currentMember = teamData.find(m => m.email === user.email);
+      if (currentMember) {
+        setCurrentUserId(currentMember.id);
+      }
+    }
+
     if (dealsData) setDeals(dealsData);
     if (stagesData && stagesData.length > 0) setStages(stagesData);
+    if (teamData) setTeamMembers(teamData);
     setLoading(false);
   };
 
@@ -243,6 +276,10 @@ export default function DealsPage() {
 
   // Apply filters to deals
   const filteredDeals = deals.filter(deal => {
+    // My Pipeline filter
+    if (myPipelineOnly && currentUserId && deal.owner_id !== currentUserId) {
+      return false;
+    }
     // Stage filter (only if specific stages selected)
     if (filters.stages.length > 0 && !filters.stages.includes(deal.stage)) {
       return false;
@@ -260,6 +297,10 @@ export default function DealsPage() {
       return false;
     }
     if (filters.maxAmount && (deal.amount || 0) > filters.maxAmount) {
+      return false;
+    }
+    // Owner filter from filters panel
+    if (filters.ownerId && deal.owner_id !== filters.ownerId) {
       return false;
     }
     return true;
@@ -418,6 +459,21 @@ export default function DealsPage() {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* My Pipeline Toggle */}
+            {currentUserId && (
+              <button
+                onClick={() => setMyPipelineOnly(!myPipelineOnly)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-2xl border spring-transition touch-feedback ${
+                  myPipelineOnly
+                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 border-violet-500 text-white shadow-lg shadow-violet-500/25'
+                    : 'text-gray-600 bg-white/60 border-white/30 hover:bg-white/80 backdrop-blur-sm'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">My Pipeline</span>
+              </button>
+            )}
+
             {/* Premium View Toggle */}
             <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-2xl p-1.5 border border-white/30">
               <button
@@ -531,6 +587,17 @@ export default function DealsPage() {
                       <div className="flex items-center gap-1.5 text-sm text-gray-600">
                         <Building2 className="w-3.5 h-3.5 text-gray-400" />
                         <span className="truncate">{deal.company.name}</span>
+                      </div>
+                    )}
+                    {deal.owner && (
+                      <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-1">
+                        <div 
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold"
+                          style={{ backgroundColor: deal.owner.color }}
+                        >
+                          {deal.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <span className="truncate">{deal.owner.name}</span>
                       </div>
                     )}
                   </div>

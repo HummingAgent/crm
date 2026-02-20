@@ -16,6 +16,7 @@ interface Deal {
   expected_close_date: string | null;
   company_id: string | null;
   primary_contact_id: string | null;
+  owner_id: string | null;
   priority: string;
   lead_source: string | null;
   deal_type: string | null;
@@ -30,6 +31,13 @@ interface Deal {
     first_name: string;
     last_name: string | null;
     email: string | null;
+  };
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    color: string;
+    avatar_url: string | null;
   };
 }
 
@@ -217,7 +225,7 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
 
         {/* Contact */}
         {deal.contact && (
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2">
             <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center">
               <span className="text-[10px] font-medium text-violet-600">
                 {deal.contact.first_name[0]}{deal.contact.last_name?.[0] || ''}
@@ -225,6 +233,21 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
             </div>
             <span className="text-xs text-gray-600 truncate">
               {deal.contact.first_name} {deal.contact.last_name}
+            </span>
+          </div>
+        )}
+
+        {/* Owner */}
+        {deal.owner && (
+          <div className="flex items-center gap-2 mb-3">
+            <div 
+              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+              style={{ backgroundColor: deal.owner.color }}
+            >
+              {deal.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </div>
+            <span className="text-xs text-gray-500 truncate">
+              {deal.owner.name}
             </span>
           </div>
         )}

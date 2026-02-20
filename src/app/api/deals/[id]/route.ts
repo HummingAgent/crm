@@ -20,6 +20,7 @@ export async function GET(
         *,
         company:crm_companies(id, name, domain, logo_url, industry, size, website),
         contact:crm_contacts(id, first_name, last_name, email, phone, title),
+        owner:crm_team_members(id, name, email, color, avatar_url),
         activities:crm_activities(id, type, subject, body, created_at)
       `)
       .eq('id', id)
@@ -61,7 +62,8 @@ export async function PATCH(
     const allowedFields = [
       'name', 'description', 'stage', 'amount', 'expected_close_date',
       'company_id', 'primary_contact_id', 'priority', 'lead_source',
-      'next_action', 'next_action_date', 'next_action_type', 'outcome', 'outcome_reason'
+      'next_action', 'next_action_date', 'next_action_type', 'outcome', 'outcome_reason',
+      'owner_id'
     ];
 
     for (const field of allowedFields) {
@@ -83,7 +85,8 @@ export async function PATCH(
       .select(`
         *,
         company:crm_companies(id, name, domain, logo_url),
-        contact:crm_contacts(id, first_name, last_name, email)
+        contact:crm_contacts(id, first_name, last_name, email),
+        owner:crm_team_members(id, name, email, color, avatar_url)
       `)
       .single();
 

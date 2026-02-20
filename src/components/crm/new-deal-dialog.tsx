@@ -24,6 +24,13 @@ interface Contact {
   company_id: string | null;
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
+}
+
 interface NewDealDialogProps {
   onClose: () => void;
   onCreated: (deal: any) => void;
@@ -36,6 +43,8 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -45,6 +54,7 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
     expected_close_date: '',
     company_id: '',
     primary_contact_id: '',
+    owner_id: '',
     priority: 'medium',
     lead_source: '',
   });
@@ -65,15 +75,29 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
   const loadCompaniesAndContacts = async () => {
     const supabase = createClient();
     
-    const [companiesRes, contactsRes] = await Promise.all([
+    const [companiesRes, contactsRes, teamRes] = await Promise.all([
       supabase.from('crm_companies').select('id, name').order('name'),
       supabase.from('crm_contacts').select('id, first_name, last_name, email, company_id').order('first_name'),
+      supabase.from('crm_team_members').select('id, name, email, color').eq('is_active', true).order('name'),
     ]);
 
     if (companiesRes.data) setCompanies(companiesRes.data);
     if (contactsRes.data) {
       setContacts(contactsRes.data);
       setFilteredContacts(contactsRes.data);
+    }
+    if (teamRes.data) {
+      setTeamMembers(teamRes.data);
+      
+      // Get current user's email and set as default owner
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const currentMember = teamRes.data.find(m => m.email === user.email);
+        if (currentMember) {
+          setCurrentUserId(currentMember.id);
+          setFormData(prev => ({ ...prev, owner_id: currentMember.id }));
+        }
+      }
     }
   };
 
@@ -91,6 +115,7 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
       expected_close_date: formData.expected_close_date || null,
       company_id: formData.company_id || null,
       primary_contact_id: formData.primary_contact_id || null,
+      owner_id: formData.owner_id || null,
       priority: formData.priority,
       lead_source: formData.lead_source || null,
     };
@@ -101,7 +126,8 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
       .select(`
         *,
         company:crm_companies(id, name, logo_url),
-        contact:crm_contacts(id, first_name, last_name, email)
+        contact:crm_contacts(id, first_name, last_name, email),
+        owner:crm_team_members(id, name, email, color, avatar_url)
       `)
       .single();
 
@@ -267,6 +293,28 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
                 {filteredContacts.map(contact => (
                   <option key={contact.id} value={contact.id}>
                     {contact.first_name} {contact.last_name} {contact.email ? `(${contact.email})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Deal Owner */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Deal Owner
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                value={formData.owner_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, owner_id: e.target.value }))}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 appearance-none"
+              >
+                <option value="">Unassigned</option>
+                {teamMembers.map(member => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
                   </option>
                 ))}
               </select>

@@ -32,9 +32,17 @@ interface Deal {
   expected_close_date: string | null;
   company_id: string | null;
   primary_contact_id: string | null;
+  owner_id: string | null;
   priority: string;
   lead_source: string | null;
   deal_type: string | null;
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
 }
 
 interface EditDealDialogProps {
@@ -49,6 +57,7 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const [formData, setFormData] = useState({
     name: deal.name || '',
@@ -58,6 +67,7 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
     expected_close_date: deal.expected_close_date?.split('T')[0] || '',
     company_id: deal.company_id || '',
     primary_contact_id: deal.primary_contact_id || '',
+    owner_id: deal.owner_id || '',
     priority: deal.priority || 'medium',
     lead_source: deal.lead_source || '',
     deal_type: deal.deal_type || '',
@@ -78,9 +88,10 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
   const loadCompaniesAndContacts = async () => {
     const supabase = createClient();
     
-    const [companiesRes, contactsRes] = await Promise.all([
+    const [companiesRes, contactsRes, teamRes] = await Promise.all([
       supabase.from('crm_companies').select('id, name').order('name'),
       supabase.from('crm_contacts').select('id, first_name, last_name, email, company_id').order('first_name'),
+      supabase.from('crm_team_members').select('id, name, email, color').eq('is_active', true).order('name'),
     ]);
 
     if (companiesRes.data) setCompanies(companiesRes.data);
@@ -96,6 +107,7 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
         setFilteredContacts(contactsRes.data);
       }
     }
+    if (teamRes.data) setTeamMembers(teamRes.data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,6 +124,7 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
       expected_close_date: formData.expected_close_date || null,
       company_id: formData.company_id || null,
       primary_contact_id: formData.primary_contact_id || null,
+      owner_id: formData.owner_id || null,
       priority: formData.priority,
       lead_source: formData.lead_source || null,
       deal_type: formData.deal_type || null,
@@ -125,7 +138,8 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
       .select(`
         *,
         company:crm_companies(id, name, logo_url),
-        contact:crm_contacts(id, first_name, last_name, email)
+        contact:crm_contacts(id, first_name, last_name, email),
+        owner:crm_team_members(id, name, email, color, avatar_url)
       `)
       .single();
 
@@ -320,6 +334,28 @@ export function EditDealDialog({ deal, onClose, onUpdated, stages }: EditDealDia
                 {filteredContacts.map(contact => (
                   <option key={contact.id} value={contact.id}>
                     {contact.first_name} {contact.last_name} {contact.email ? `(${contact.email})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Deal Owner */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Deal Owner
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                value={formData.owner_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, owner_id: e.target.value }))}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 appearance-none"
+              >
+                <option value="">Unassigned</option>
+                {teamMembers.map(member => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
                   </option>
                 ))}
               </select>

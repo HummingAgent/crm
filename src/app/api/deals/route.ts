@@ -17,7 +17,8 @@ export async function GET(request: Request) {
       .select(`
         *,
         company:crm_companies(id, name, domain, logo_url),
-        contact:crm_contacts(id, first_name, last_name, email)
+        contact:crm_contacts(id, first_name, last_name, email),
+        owner:crm_team_members(id, name, email, color, avatar_url)
       `);
 
     // Filter by stage
@@ -42,6 +43,12 @@ export async function GET(request: Request) {
     const leadSource = searchParams.get('lead_source');
     if (leadSource) {
       query = query.eq('lead_source', leadSource);
+    }
+
+    // Filter by owner
+    const ownerId = searchParams.get('owner_id');
+    if (ownerId) {
+      query = query.eq('owner_id', ownerId);
     }
 
     // Pagination
@@ -89,11 +96,13 @@ export async function POST(request: Request) {
         primary_contact_id: body.primary_contact_id,
         priority: body.priority || 'medium',
         lead_source: body.lead_source,
+        owner_id: body.owner_id,
       })
       .select(`
         *,
         company:crm_companies(id, name, domain, logo_url),
-        contact:crm_contacts(id, first_name, last_name, email)
+        contact:crm_contacts(id, first_name, last_name, email),
+        owner:crm_team_members(id, name, email, color, avatar_url)
       `)
       .single();
 
