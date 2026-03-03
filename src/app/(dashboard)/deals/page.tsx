@@ -23,7 +23,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X, List, Columns, Pencil, Trash2, Eye } from 'lucide-react';
+import { Plus, Filter, MoreHorizontal, DollarSign, Calendar, User, Building2, X, List, Columns, Pencil, Trash2, Eye, Flame, Sun, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
@@ -33,6 +33,17 @@ import { DealFilters } from '@/components/crm/deal-filters';
 import { DealDetailPanel } from '@/components/crm/deal-detail-panel';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
+
+interface Pipeline {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  color: string;
+  icon: string;
+  position: number;
+  is_default: boolean;
+}
 
 interface TeamMember {
   id: string;
@@ -56,6 +67,7 @@ interface Deal {
   lead_source: string | null;
   deal_type: string | null;
   last_activity_at: string | null;
+  pipeline_id: string | null;
   company?: {
     id: string;
     name: string;
@@ -77,16 +89,17 @@ interface PipelineStage {
   position: number;
   is_won: boolean;
   is_lost: boolean;
+  pipeline_id: string | null;
 }
 
 const DEFAULT_STAGES: PipelineStage[] = [
-  { id: 'new-lead', name: 'New Leads', color: '#8b5cf6', position: 1, is_won: false, is_lost: false },
-  { id: 'discovery-scheduled', name: 'Discovery Scheduled', color: '#3b82f6', position: 2, is_won: false, is_lost: false },
-  { id: 'discovery-complete', name: 'Discovery Complete', color: '#06b6d4', position: 3, is_won: false, is_lost: false },
-  { id: 'proposal-draft', name: 'Create Proposal', color: '#f59e0b', position: 4, is_won: false, is_lost: false },
-  { id: 'proposal-sent', name: 'Proposal Sent', color: '#f97316', position: 5, is_won: false, is_lost: false },
-  { id: 'contract-sent', name: 'Contract Sent', color: '#ec4899', position: 6, is_won: false, is_lost: false },
-  { id: 'closed-won', name: 'Closed Won', color: '#22c55e', position: 7, is_won: true, is_lost: false },
+  { id: 'new-lead', name: 'New Leads', color: '#8b5cf6', position: 1, is_won: false, is_lost: false, pipeline_id: null },
+  { id: 'discovery-scheduled', name: 'Discovery Scheduled', color: '#3b82f6', position: 2, is_won: false, is_lost: false, pipeline_id: null },
+  { id: 'discovery-complete', name: 'Discovery Complete', color: '#06b6d4', position: 3, is_won: false, is_lost: false, pipeline_id: null },
+  { id: 'proposal-draft', name: 'Create Proposal', color: '#f59e0b', position: 4, is_won: false, is_lost: false, pipeline_id: null },
+  { id: 'proposal-sent', name: 'Proposal Sent', color: '#f97316', position: 5, is_won: false, is_lost: false, pipeline_id: null },
+  { id: 'contract-sent', name: 'Contract Sent', color: '#ec4899', position: 6, is_won: false, is_lost: false, pipeline_id: null },
+  { id: 'closed-won', name: 'Closed Won', color: '#22c55e', position: 7, is_won: true, is_lost: false, pipeline_id: null },
 ];
 
 interface Filters {
@@ -107,9 +120,20 @@ const emptyFilters: Filters = {
   ownerId: null,
 };
 
+const PIPELINE_STORAGE_KEY = 'crm-selected-pipeline';
+
+const pipelineIcons: Record<string, React.ReactNode> = {
+  flame: <Flame className="w-4 h-4" />,
+  sun: <Sun className="w-4 h-4" />,
+  users: <Users className="w-4 h-4" />,
+};
+
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [allStages, setAllStages] = useState<PipelineStage[]>(DEFAULT_STAGES);
   const [stages, setStages] = useState<PipelineStage[]>(DEFAULT_STAGES);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [myPipelineOnly, setMyPipelineOnly] = useState(false);
@@ -139,6 +163,40 @@ export default function DealsPage() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Load saved pipeline from localStorage
+  useEffect(() => {
+    const savedPipelineId = localStorage.getItem(PIPELINE_STORAGE_KEY);
+    if (savedPipelineId) {
+      setSelectedPipelineId(savedPipelineId);
+    }
+  }, []);
+
+  // Save selected pipeline to localStorage
+  useEffect(() => {
+    if (selectedPipelineId) {
+      localStorage.setItem(PIPELINE_STORAGE_KEY, selectedPipelineId);
+    }
+  }, [selectedPipelineId]);
+
+  // Filter stages by selected pipeline
+  useEffect(() => {
+    if (selectedPipelineId) {
+      const filteredStages = allStages.filter(
+        s => s.pipeline_id === selectedPipelineId || s.pipeline_id === null
+      );
+      // Prefer pipeline-specific stages, fallback to default
+      const pipelineSpecificStages = filteredStages.filter(s => s.pipeline_id === selectedPipelineId);
+      setStages(pipelineSpecificStages.length > 0 ? pipelineSpecificStages : filteredStages);
+      
+      // Set default stage for new deals
+      if (pipelineSpecificStages.length > 0) {
+        setDefaultStage(pipelineSpecificStages[0].id);
+      }
+    } else {
+      setStages(allStages);
+    }
+  }, [selectedPipelineId, allStages]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -183,6 +241,30 @@ export default function DealsPage() {
   const loadData = async () => {
     const supabase = createClient();
     
+    // Load pipelines
+    const { data: pipelinesData } = await supabase
+      .from('crm_pipelines')
+      .select('*')
+      .eq('is_active', true)
+      .order('position');
+
+    if (pipelinesData && pipelinesData.length > 0) {
+      setPipelines(pipelinesData);
+      // Set default pipeline if not already set
+      const savedPipelineId = localStorage.getItem(PIPELINE_STORAGE_KEY);
+      if (!savedPipelineId) {
+        const defaultPipeline = pipelinesData.find(p => p.is_default) || pipelinesData[0];
+        setSelectedPipelineId(defaultPipeline.id);
+      } else {
+        // Verify saved pipeline still exists
+        const pipelineExists = pipelinesData.some(p => p.id === savedPipelineId);
+        if (!pipelineExists) {
+          const defaultPipeline = pipelinesData.find(p => p.is_default) || pipelinesData[0];
+          setSelectedPipelineId(defaultPipeline.id);
+        }
+      }
+    }
+
     // Load deals with company, contact, and owner info
     const { data: dealsData, error: dealsError } = await supabase
       .from('crm_deals')
@@ -217,7 +299,7 @@ export default function DealsPage() {
     }
 
     if (dealsData) setDeals(dealsData);
-    if (stagesData && stagesData.length > 0) setStages(stagesData);
+    if (stagesData && stagesData.length > 0) setAllStages(stagesData);
     if (teamData) setTeamMembers(teamData);
     setLoading(false);
   };
@@ -274,8 +356,12 @@ export default function DealsPage() {
     }
   };
 
-  // Apply filters to deals
+  // Apply filters to deals (including pipeline filter)
   const filteredDeals = deals.filter(deal => {
+    // Pipeline filter
+    if (selectedPipelineId && deal.pipeline_id !== selectedPipelineId) {
+      return false;
+    }
     // My Pipeline filter
     if (myPipelineOnly && currentUserId && deal.owner_id !== currentUserId) {
       return false;
@@ -328,6 +414,10 @@ export default function DealsPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handlePipelineChange = (pipelineId: string) => {
+    setSelectedPipelineId(pipelineId);
   };
 
   if (loading) {
@@ -440,6 +530,8 @@ export default function DealsPage() {
     }
   };
 
+  const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
+
   return (
     <div className="min-h-[calc(100vh-12rem)] lg:h-[calc(100vh-theme(spacing.32))] pb-20 lg:pb-0">
       {/* Premium Header */}
@@ -531,6 +623,42 @@ export default function DealsPage() {
           </div>
         </div>
       </div>
+
+      {/* Pipeline Tabs */}
+      {pipelines.length > 0 && (
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+          {pipelines.map((pipeline) => {
+            const isSelected = selectedPipelineId === pipeline.id;
+            const dealCount = deals.filter(d => d.pipeline_id === pipeline.id).length;
+            return (
+              <button
+                key={pipeline.id}
+                onClick={() => handlePipelineChange(pipeline.id)}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-2xl border spring-transition touch-feedback whitespace-nowrap ${
+                  isSelected
+                    ? 'text-white shadow-lg'
+                    : 'text-gray-600 bg-white/60 border-white/30 hover:bg-white/80 backdrop-blur-sm'
+                }`}
+                style={isSelected ? { 
+                  backgroundColor: pipeline.color,
+                  borderColor: pipeline.color,
+                  boxShadow: `0 4px 14px ${pipeline.color}40`
+                } : {}}
+              >
+                <span className={isSelected ? 'text-white' : ''} style={!isSelected ? { color: pipeline.color } : {}}>
+                  {pipelineIcons[pipeline.icon] || pipelineIcons.flame}
+                </span>
+                {pipeline.name}
+                <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                  isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {dealCount}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* List View (Mobile-friendly with swipe gestures) */}
       {viewMode === 'list' && (
@@ -671,15 +799,16 @@ export default function DealsPage() {
         <NewDealDialog
           onClose={() => {
             setShowNewDeal(false);
-            setDefaultStage('new-lead');
+            setDefaultStage(stages[0]?.id || 'new-lead');
           }}
           onCreated={(newDeal) => {
             setDeals(prev => [newDeal, ...prev]);
             setShowNewDeal(false);
-            setDefaultStage('new-lead');
+            setDefaultStage(stages[0]?.id || 'new-lead');
           }}
           stages={stages}
           defaultStage={defaultStage}
+          pipelineId={selectedPipelineId}
         />
       )}
 

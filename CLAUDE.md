@@ -129,9 +129,10 @@ All tables prefixed with `crm_` (shared Supabase instance). Schema in `supabase/
 
 | Table | Purpose |
 |-------|---------|
+| `crm_pipelines` | Multiple pipelines (Hot Deals, Warm, Lead Pool) |
 | `crm_companies` | Organizations (name, domain, industry, research notes) |
 | `crm_contacts` | People (name, email, phone, title, company_id, lead_source) |
-| `crm_deals` | Pipeline deals (name, stage, amount, priority, next_action, outcome) |
+| `crm_deals` | Pipeline deals (name, stage, amount, priority, next_action, outcome, pipeline_id) |
 | `crm_deal_contacts` | Many-to-many deals ↔ contacts (with role: decision-maker, etc.) |
 | `crm_activities` | Unified timeline (emails, calls, meetings, notes, stage-changes) |
 | `crm_products` | Products/services catalog |
@@ -142,12 +143,36 @@ All tables prefixed with `crm_` (shared Supabase instance). Schema in `supabase/
 | `crm_calendar_connections` | Google Calendar OAuth tokens per team member |
 | `crm_calendar_events` | Cached events from connected Google Calendars |
 
-### Pipeline Stages (default)
+### Multiple Pipelines
+The CRM supports multiple pipelines for different deal workflows:
+
+| Pipeline | Slug | Purpose | Color |
+|----------|------|---------|-------|
+| **Hot Deals** | `hot-deals` | Active deals in negotiation | Red (#ef4444) |
+| **Warm** | `warm` | Interested prospects with potential | Amber (#f59e0b) |
+| **Lead Pool** | `lead-pool` | New leads and prospects | Blue (#3b82f6) |
+
+Each pipeline has its own set of stages. Deals belong to exactly one pipeline.
+Selected pipeline persists via localStorage.
+
+Table: `crm_pipelines`
+
+### Pipeline Stages (default - Hot Deals)
 ```
 new-lead → discovery-scheduled → discovery-complete → proposal-draft →
 proposal-sent → contract-sent → closed-won / closed-lost
                                  follow-up → current-customer
                                               dead
+```
+
+### Warm Pipeline Stages
+```
+New → Researching → Contacted → Interested → Qualified → Not Interested
+```
+
+### Lead Pool Pipeline Stages
+```
+New Leads → To Research → Researched → To Contact → Promoted to Warm → Disqualified
 ```
 
 ### Deal Lifecycle
@@ -221,7 +246,7 @@ Uses **Azure OpenAI Foundry** (GPT-5.2) via `@ai-sdk/azure`. The endpoint is Hum
 
 ## Key Features
 
-1. **Kanban Deal Pipeline** — Drag-and-drop board with DnD Kit, customizable stages
+1. **Multi-Pipeline Kanban** — Multiple pipelines (Hot Deals, Warm, Lead Pool) with drag-and-drop, customizable stages per pipeline
 2. **AI Chat** — Ask anything about your pipeline (full CRM context injection)
 3. **Global Search** — Cmd+K shortcut, searches deals/contacts/companies
 4. **Email Integration** — Send (Resend) + receive (ingest API) with auto-deal linking

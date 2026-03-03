@@ -21,6 +21,12 @@ export async function GET(request: Request) {
         owner:crm_team_members(id, name, email, color, avatar_url)
       `);
 
+    // Filter by pipeline
+    const pipelineId = searchParams.get('pipeline_id');
+    if (pipelineId) {
+      query = query.eq('pipeline_id', pipelineId);
+    }
+
     // Filter by stage
     const stage = searchParams.get('stage');
     if (stage) {
@@ -97,6 +103,7 @@ export async function POST(request: Request) {
         priority: body.priority || 'medium',
         lead_source: body.lead_source,
         owner_id: body.owner_id,
+        pipeline_id: body.pipeline_id || '11111111-1111-1111-1111-111111111111', // Default to Hot Deals
       })
       .select(`
         *,

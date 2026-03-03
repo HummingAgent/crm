@@ -36,9 +36,10 @@ interface NewDealDialogProps {
   onCreated: (deal: any) => void;
   stages: PipelineStage[];
   defaultStage?: string;
+  pipelineId?: string | null;
 }
 
-export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewDealDialogProps) {
+export function NewDealDialog({ onClose, onCreated, stages, defaultStage, pipelineId }: NewDealDialogProps) {
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -118,6 +119,7 @@ export function NewDealDialog({ onClose, onCreated, stages, defaultStage }: NewD
       owner_id: formData.owner_id || null,
       priority: formData.priority,
       lead_source: formData.lead_source || null,
+      pipeline_id: pipelineId || '11111111-1111-1111-1111-111111111111', // Default to Hot Deals
     };
 
     const { data, error } = await supabase
