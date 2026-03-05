@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 // GET /api/contacts - List contacts
 export async function GET(request: Request) {
+  const supabase = getAdminClient();
   try {
     const { searchParams } = new URL(request.url);
     

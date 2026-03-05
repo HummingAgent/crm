@@ -66,6 +66,7 @@ function slackResponse(text: string, responseType: 'ephemeral' | 'in_channel' = 
 
 // /crm add <first> <last> <company>
 async function handleAdd(args: string[]): Promise<NextResponse> {
+  const supabase = getAdminClient();
   if (args.length < 1) {
     return slackResponse('Usage: `/crm add <first_name> [last_name] [company_name]`');
   }
@@ -119,6 +120,7 @@ async function handleAdd(args: string[]): Promise<NextResponse> {
 
 // /crm deal <name> [stage]
 async function handleDeal(args: string[]): Promise<NextResponse> {
+  const supabase = getAdminClient();
   if (args.length < 1) {
     return slackResponse('Usage: `/crm deal <deal_name> [stage]`\nStages: new-lead, discovery-scheduled, discovery-complete, proposal-draft, proposal-sent, contract-sent');
   }
@@ -191,6 +193,7 @@ async function handleDeal(args: string[]): Promise<NextResponse> {
 
 // /crm log <deal-name> <note>
 async function handleLog(args: string[], fullText: string): Promise<NextResponse> {
+  const supabase = getAdminClient();
   if (args.length < 2) {
     return slackResponse('Usage: `/crm log <deal_name> <note>`\nTip: Use the deal name (or partial match), then your note.');
   }
@@ -247,6 +250,7 @@ async function handleLog(args: string[], fullText: string): Promise<NextResponse
 
 // /crm status
 async function handleStatus(): Promise<NextResponse> {
+  const supabase = getAdminClient();
   const { data: deals } = await supabase
     .from('crm_deals')
     .select('stage, amount');
