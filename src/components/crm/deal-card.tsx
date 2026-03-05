@@ -138,8 +138,8 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
         onClick={() => onView?.(deal)}
         className={cn(
           'group relative p-4 rounded-lg border transition-all duration-200 cursor-pointer',
-          'bg-[var(--card)] border-[var(--border)] hover:border-[var(--muted-foreground)]',
-          'hover:shadow-lg',
+          'bg-white border-[var(--border)] hover:border-[var(--muted-foreground)]',
+          'shadow-sm hover:shadow-md',
           (isDragging || isSorting) && 'opacity-50 scale-105 shadow-2xl shadow-[var(--primary)]/20 border-[var(--primary)]/50'
         )}
       >

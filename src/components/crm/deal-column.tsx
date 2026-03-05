@@ -99,18 +99,32 @@ export function DealColumn({
 
   const otherStages = allStages.filter(s => s.id !== stage.id);
 
+  // Convert hex to RGB for tinted background
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 200, g: 200, b: 200 };
+  };
+
+  const rgb = hexToRgb(stage.color);
+  const tintedBg = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`;
+
   if (isCollapsed) {
     return (
       <div 
-        className="flex-shrink-0 w-10 bg-[var(--card)] border border-[var(--border)] rounded-xl cursor-pointer hover:bg-[var(--card-hover)] transition-all"
+        className="flex-shrink-0 w-10 rounded-xl cursor-pointer hover:opacity-80 transition-all"
+        style={{ backgroundColor: tintedBg }}
         onClick={() => setIsCollapsed(false)}
       >
         <div className="flex flex-col items-center py-3 gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
-          <span className="text-xs font-medium text-[var(--muted)] writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+          <span className="text-xs font-medium text-[var(--foreground)] writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
             {stage.name}
           </span>
-          <span className="px-1.5 py-0.5 bg-[var(--card-hover)] rounded text-[10px] font-medium text-[var(--muted)]">
+          <span className="px-1.5 py-0.5 bg-white/50 rounded text-[10px] font-medium text-[var(--foreground)]">
             {deals.length}
           </span>
           <ChevronRight className="w-3.5 h-3.5 text-[var(--muted)] mt-2" />
@@ -123,31 +137,26 @@ export function DealColumn({
     <div
       className={cn(
         'flex flex-col w-72 sm:w-80 min-w-72 sm:min-w-80 h-full rounded-xl transition-all duration-200',
-        'bg-[var(--card)]/50 border border-[var(--border)]',
-        isOver && 'ring-2 ring-[var(--primary)]/50 bg-[var(--primary-light)]'
+        isOver && 'ring-2 ring-[var(--primary)]/50'
       )}
+      style={{ backgroundColor: tintedBg }}
     >
       {/* Column Header */}
-      <div className="flex flex-col px-4 py-3 border-b border-[var(--border)]">
+      <div className="flex flex-col px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsCollapsed(true)}
-              className="p-0.5 text-[var(--muted)] hover:text-[var(--foreground)] rounded hover:bg-[var(--card-hover)] transition-colors"
-              title="Collapse column"
-            >
-              <ChevronDown className="w-4 h-4" />
-            </button>
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
-            <h3 className="font-medium text-[var(--foreground)] text-sm">{stage.name}</h3>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--card-hover)] text-[var(--muted)]">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
+            <h3 className="font-semibold text-[var(--foreground)] text-sm uppercase tracking-wide" style={{ color: stage.color }}>
+              {stage.name}
+            </h3>
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-white/60 text-[var(--foreground)]">
               {deals.length}
             </span>
           </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded transition-colors">
+              <button className="p-1 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/50 rounded transition-colors">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
@@ -201,10 +210,6 @@ export function DealColumn({
           </DropdownMenu>
         </div>
 
-        {/* Total value */}
-        <span className="text-sm text-[var(--muted)] mt-1 ml-9">
-          {formatCurrency(total)}
-        </span>
       </div>
 
       {/* Cards */}
@@ -231,13 +236,13 @@ export function DealColumn({
       </div>
 
       {/* Add Deal Button (bottom) */}
-      <div className="p-2 border-t border-[var(--border)]">
+      <div className="p-2">
         <button 
           onClick={() => onAddDeal?.(stage.id)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/50 rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add deal
+          New task
         </button>
       </div>
     </div>
