@@ -108,7 +108,7 @@ ${crmContext}`;
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
-      maxTokens: 1000,
+      maxOutputTokens: 1000,
       temperature: 0.7,
     });
 

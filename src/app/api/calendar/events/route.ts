@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
     // Flatten and sort by start time
     const events = allEvents
       .flat()
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort((a, b) => new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime());
 
     return NextResponse.json({ events });
   } catch (err) {

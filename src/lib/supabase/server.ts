@@ -37,9 +37,10 @@ export async function createClient() {
 }
 
 // Admin client for server-side operations (bypasses RLS)
+// Note: Not typed to Database since CRM tables aren't in the type definitions yet
 export function createAdminClient() {
-  return createSupabaseClient<Database>(
+  return createSupabaseClient(
     SUPABASE_URL,
-    SUPABASE_SERVICE_KEY
+    SUPABASE_SERVICE_KEY!
   );
 }

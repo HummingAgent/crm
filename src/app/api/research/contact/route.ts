@@ -159,9 +159,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Research the contact
+        const companyData = Array.isArray(contact.company) ? contact.company[0] : contact.company;
         const research = await researchContact({
           ...contact,
-          company: contact.company as { name: string; website: string | null; industry: string | null; description: string | null } | null,
+          company: companyData as { name: string; website: string | null; industry: string | null; description: string | null } | null,
         });
 
         // Save research data
