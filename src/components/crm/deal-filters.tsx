@@ -12,6 +12,7 @@ interface DealFiltersProps {
     maxAmount: number | null;
     minScore: number | null;
     maxScore: number | null;
+    ownerId: string | null;
   };
   onChange: (filters: DealFiltersProps['filters']) => void;
   onClose: () => void;
@@ -74,7 +75,7 @@ export function DealFilters({ filters, onChange, onClose }: DealFiltersProps) {
   };
 
   const clearFilters = () => {
-    const cleared = {
+    const cleared: DealFiltersProps['filters'] = {
       stages: [],
       priorities: [],
       sources: [],
@@ -82,6 +83,7 @@ export function DealFilters({ filters, onChange, onClose }: DealFiltersProps) {
       maxAmount: null,
       minScore: null,
       maxScore: null,
+      ownerId: null,
     };
     setLocalFilters(cleared);
     onChange(cleared);

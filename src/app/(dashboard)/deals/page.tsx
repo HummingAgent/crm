@@ -106,6 +106,8 @@ interface Filters {
   sources: string[];
   minAmount: number | null;
   maxAmount: number | null;
+  minScore: number | null;
+  maxScore: number | null;
   ownerId: string | null;
 }
 
@@ -115,6 +117,8 @@ const emptyFilters: Filters = {
   sources: [],
   minAmount: null,
   maxAmount: null,
+  minScore: null,
+  maxScore: null,
   ownerId: null,
 };
 

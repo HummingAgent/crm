@@ -26,6 +26,8 @@ interface Deal {
   expected_close_date: string | null;
   company_id: string | null;
   primary_contact_id: string | null;
+  owner_id: string | null;
+  pipeline_id: string | null;
   priority: string;
   lead_source: string | null;
   deal_type: string | null;
