@@ -43,6 +43,13 @@ interface Deal {
     last_name: string | null;
     email: string | null;
   };
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    color: string;
+    avatar_url: string | null;
+  };
 }
 
 interface PipelineStage {
@@ -85,12 +92,8 @@ export function DealColumn({
   });
 
   const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    }
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`;
-    }
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
     return `$${amount}`;
   };
 
@@ -99,83 +102,81 @@ export function DealColumn({
   if (isCollapsed) {
     return (
       <div 
-        className="flex-shrink-0 w-10 bg-[var(--card)] border border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--card-hover)] transition-colors"
+        className="flex-shrink-0 w-10 bg-zinc-900/50 border border-zinc-800/50 rounded-xl cursor-pointer hover:bg-zinc-800/50 transition-all"
         onClick={() => setIsCollapsed(false)}
       >
         <div className="flex flex-col items-center py-3 gap-2">
-          <div 
-            className="w-2.5 h-2.5 rounded-full" 
-            style={{ backgroundColor: stage.color }}
-          />
-          <span className="text-xs font-medium text-[var(--muted)] writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
+          <span className="text-xs font-medium text-zinc-400 writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
             {stage.name}
           </span>
-          <span className="px-1.5 py-0.5 bg-[var(--card-hover)] rounded text-[10px] font-medium text-[var(--muted)]">
+          <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-[10px] font-medium text-zinc-400">
             {deals.length}
           </span>
-          <ChevronRight className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-2" />
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-500 mt-2" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="kanban-column flex-shrink-0">
+    <div
+      className={cn(
+        'flex flex-col w-72 sm:w-80 min-w-72 sm:min-w-80 h-full rounded-xl transition-all duration-200',
+        'bg-zinc-900/50 border border-zinc-800/50',
+        isOver && 'ring-2 ring-indigo-500/50 bg-indigo-950/20'
+      )}
+    >
       {/* Column Header */}
-      <div className="kanban-column-header">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col px-4 py-3 border-b border-zinc-800/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsCollapsed(true)}
-              className="p-0.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)] rounded hover:bg-[var(--card-hover)] transition-colors"
+              className="p-0.5 text-zinc-500 hover:text-white rounded hover:bg-zinc-800 transition-colors"
               title="Collapse column"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
-            <div 
-              className="w-2.5 h-2.5 rounded-full" 
-              style={{ backgroundColor: stage.color }}
-            />
-            <h3 className="font-medium text-[var(--foreground)] text-sm">{stage.name}</h3>
-            <span className="px-1.5 py-0.5 bg-[var(--card-hover)] rounded text-xs font-medium text-[var(--muted)]">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
+            <h3 className="font-medium text-white text-sm">{stage.name}</h3>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
               {deals.length}
             </span>
           </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] rounded hover:bg-[var(--card-hover)] transition-colors">
+              <button className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded transition-colors">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)}>
+            <DropdownMenuContent align="end" className="w-44 bg-zinc-800 border-zinc-700">
+              <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)} className="text-zinc-300 hover:text-white hover:bg-zinc-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Add deal
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsCollapsed(true)}>
+              <DropdownMenuItem onClick={() => setIsCollapsed(true)} className="text-zinc-300 hover:text-white hover:bg-zinc-700">
                 <ChevronRight className="w-4 h-4 mr-2" />
-                Collapse column
+                Collapse
               </DropdownMenuItem>
               
               {deals.length > 0 && otherStages.length > 0 && (
                 <>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-zinc-700" />
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
+                    <DropdownMenuSubTrigger className="text-zinc-300 hover:text-white hover:bg-zinc-700">
                       <ArrowRight className="w-4 h-4 mr-2" />
                       Move all to...
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-44">
+                    <DropdownMenuSubContent className="w-44 bg-zinc-800 border-zinc-700">
                       {otherStages.map((targetStage) => (
                         <DropdownMenuItem 
                           key={targetStage.id}
                           onClick={() => onMoveAllDeals?.(stage.id, targetStage.id)}
+                          className="text-zinc-300 hover:text-white hover:bg-zinc-700"
                         >
-                          <div 
-                            className="w-2 h-2 rounded-full mr-2" 
-                            style={{ backgroundColor: targetStage.color }}
-                          />
+                          <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: targetStage.color }} />
                           {targetStage.name}
                         </DropdownMenuItem>
                       ))}
@@ -186,10 +187,10 @@ export function DealColumn({
               
               {deals.length > 0 && (
                 <>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-zinc-700" />
                   <DropdownMenuItem 
-                    variant="destructive"
                     onClick={() => onDeleteAllDeals?.(stage.id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete all ({deals.length})
@@ -201,41 +202,39 @@ export function DealColumn({
         </div>
 
         {/* Total value */}
-        <span className="text-sm font-medium text-[var(--muted)]">
+        <span className="text-sm text-zinc-500 mt-1 ml-9">
           {formatCurrency(total)}
         </span>
       </div>
 
-      {/* Droppable area */}
-      <div
-        ref={setNodeRef}
-        className={cn(
-          'kanban-column-content',
-          isOver && 'bg-[var(--primary-light)] border-2 border-dashed border-[var(--primary-muted)] rounded-lg'
-        )}
-      >
-        <SortableContext items={deals.map(d => d.id)} strategy={verticalListSortingStrategy}>
-          {deals.map((deal) => (
-            <DealCard 
-              key={deal.id} 
-              deal={deal} 
-              onView={onViewDeal}
-              onEdit={onEditDeal}
-              onDelete={onDeleteDeal}
-            />
-          ))}
-        </SortableContext>
+      {/* Cards */}
+      <div className="flex-1 overflow-y-auto px-2 py-2">
+        <div ref={setNodeRef} className="flex flex-col gap-2 min-h-[100px]">
+          <SortableContext items={deals.map(d => d.id)} strategy={verticalListSortingStrategy}>
+            {deals.map((deal) => (
+              <DealCard 
+                key={deal.id} 
+                deal={deal} 
+                onView={onViewDeal}
+                onEdit={onEditDeal}
+                onDelete={onDeleteDeal}
+              />
+            ))}
+          </SortableContext>
 
-        {deals.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 text-[var(--muted-foreground)]">
-            <p className="text-sm">No deals</p>
-          </div>
-        )}
+          {deals.length === 0 && (
+            <div className="flex items-center justify-center h-24 text-zinc-600 text-sm">
+              No deals
+            </div>
+          )}
+        </div>
+      </div>
 
-        {/* Add deal button */}
+      {/* Add Deal Button (bottom) */}
+      <div className="p-2 border-t border-zinc-800/50">
         <button 
           onClick={() => onAddDeal?.(stage.id)}
-          className="flex items-center justify-center gap-2 w-full py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] rounded-lg border border-dashed border-[var(--border)] hover:border-[var(--primary-muted)] transition-colors mt-2"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-zinc-500 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add deal

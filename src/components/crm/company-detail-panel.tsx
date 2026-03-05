@@ -17,6 +17,7 @@ import {
   Mail
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { CompanyEnrichButton } from './company-enrich-button';
 
 interface Company {
   id: string;
@@ -130,6 +131,18 @@ export function CompanyDetailPanel({ company, onClose, onUpdated, onDeleted, onE
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Company Details</h2>
         <div className="flex items-center gap-2">
+          <CompanyEnrichButton
+            companyId={company.id}
+            companyName={company.name}
+            hasLogo={!!company.logo_url}
+            variant="icon"
+            size="md"
+            onEnriched={(result) => {
+              if (result.logo) {
+                onUpdated({ ...company, logo_url: result.logo });
+              }
+            }}
+          />
           {onEdit && (
             <button 
               onClick={() => onEdit(company)}

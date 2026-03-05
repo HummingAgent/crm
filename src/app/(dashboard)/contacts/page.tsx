@@ -18,6 +18,9 @@ import { createClient } from '@/lib/supabase/client';
 import { NewContactDialog } from '@/components/crm/new-contact-dialog';
 import { ContactDetailPanel } from '@/components/crm/contact-detail-panel';
 import { EditContactDialog } from '@/components/crm/edit-contact-dialog';
+import { ApolloImportDialog } from '@/components/crm/apollo-import-dialog';
+import { ResearchButton } from '@/components/crm/contact-research-panel';
+import { Rocket } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -46,6 +49,7 @@ export default function ContactsPage() {
   const [showNewContact, setShowNewContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [showApolloImport, setShowApolloImport] = useState(false);
   const [sortField, setSortField] = useState<'name' | 'company' | 'created_at'>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -128,13 +132,22 @@ export default function ContactsPage() {
           <h1 className="text-3xl lg:text-4xl font-bold text-gradient-violet">Contacts</h1>
           <p className="text-lg text-gray-600 mt-2 font-medium">{contacts.length} people in your network</p>
         </div>
-        <button 
-          onClick={() => setShowNewContact(true)}
-          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-2xl shadow-lg shadow-violet-500/25 spring-transition hover:scale-105 touch-feedback pulse-glow"
-        >
-          <Plus className="w-5 h-5" />
-          Add Contact
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowApolloImport(true)}
+            className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-2xl spring-transition hover:scale-105 touch-feedback"
+          >
+            <Rocket className="w-5 h-5" />
+            Import from Apollo
+          </button>
+          <button 
+            onClick={() => setShowNewContact(true)}
+            className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-2xl shadow-lg shadow-violet-500/25 spring-transition hover:scale-105 touch-feedback pulse-glow"
+          >
+            <Plus className="w-5 h-5" />
+            Add Contact
+          </button>
+        </div>
       </div>
 
       {/* Premium Search & Filters */}
@@ -437,6 +450,14 @@ export default function ContactsPage() {
             }
             setEditingContact(null);
           }}
+        />
+      )}
+
+      {/* Apollo Import Dialog */}
+      {showApolloImport && (
+        <ApolloImportDialog
+          onClose={() => setShowApolloImport(false)}
+          onImported={() => loadContacts()}
         />
       )}
     </div>

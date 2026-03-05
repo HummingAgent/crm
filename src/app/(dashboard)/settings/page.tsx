@@ -12,8 +12,12 @@ import {
   Loader2,
   Clock,
   Send,
-  Timer
+  Timer,
+  Calendar,
+  TrendingUp
 } from 'lucide-react';
+import { BookingLinksManager } from '@/components/crm/booking-links-manager';
+import { ScoreAllButton } from '@/components/crm/score-deal-button';
 
 const DEFAULT_STALE_THRESHOLDS: Record<string, number> = {
   'new-lead': 2,
@@ -309,6 +313,46 @@ export default function SettingsPage() {
           )}
           {digestResult === 'success' ? 'Digest Sent!' : digestResult === 'error' ? 'Failed' : 'Send Digest Now'}
         </button>
+      </div>
+
+      {/* Booking Links */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900">Booking Links</h2>
+            <p className="text-sm text-gray-500">Manage scheduling links for client meetings</p>
+          </div>
+        </div>
+
+        <BookingLinksManager />
+      </div>
+
+      {/* Lead Scoring */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900">Lead Scoring</h2>
+            <p className="text-sm text-gray-500">Automatically score leads based on engagement and fit</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Lead scoring calculates a score for each contact and deal based on configurable rules. 
+            Higher scores indicate better-qualified leads.
+          </p>
+          
+          <div className="flex items-center gap-3">
+            <ScoreAllButton type="all" />
+            <span className="text-sm text-gray-500">Recalculate scores for all contacts and deals</span>
+          </div>
+        </div>
       </div>
 
       {/* Pipeline Settings */}

@@ -27,6 +27,8 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { ComposeEmailDialog } from './compose-email-dialog';
 import { ScheduleNextAction } from './schedule-next-action';
+import { ScoreDealButton, ScoreBreakdownDisplay } from './score-deal-button';
+import { ScoreBadge } from './score-badge';
 
 interface Deal {
   id: string;
@@ -61,6 +63,12 @@ interface Deal {
   next_activity_date?: string | null;
   tags?: string[] | null;
   lead_type?: string | null;
+  lead_score?: number | null;
+  score_breakdown?: {
+    rules: { name: string; points: number }[];
+    total: number;
+    calculated_at: string;
+  } | null;
   company?: {
     id: string;
     name: string;
@@ -233,6 +241,9 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
                   {deal.priority}
                 </span>
               )}
+              {deal.lead_score !== null && deal.lead_score !== undefined && deal.lead_score > 0 && (
+                <ScoreBadge score={deal.lead_score} size="sm" />
+              )}
             </div>
             <h2 className="text-lg md:text-xl font-bold text-gray-900 line-clamp-2">{deal.name}</h2>
             {deal.company && (
@@ -240,6 +251,14 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
             )}
           </div>
           <div className="flex items-center gap-1 md:gap-2">
+            <ScoreDealButton
+              dealId={deal.id}
+              currentScore={deal.lead_score}
+              variant="icon"
+              onScored={(score, breakdown) => {
+                setDeal(prev => prev ? { ...prev, lead_score: score, score_breakdown: breakdown } : null);
+              }}
+            />
             {onEdit && (
               <button 
                 onClick={() => onEdit(deal)}
@@ -405,6 +424,13 @@ export function DealDetailPanel({ dealId, onClose, onEdit, onDelete, stages }: D
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Lead Score Breakdown */}
+              {deal.score_breakdown && deal.score_breakdown.rules?.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <ScoreBreakdownDisplay breakdown={deal.score_breakdown} />
                 </div>
               )}
 

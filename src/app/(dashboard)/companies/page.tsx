@@ -17,6 +17,8 @@ import { createClient } from '@/lib/supabase/client';
 import { NewCompanyDialog } from '@/components/crm/new-company-dialog';
 import { CompanyDetailPanel } from '@/components/crm/company-detail-panel';
 import { EditCompanyDialog } from '@/components/crm/edit-company-dialog';
+import { BulkEnrichButton } from '@/components/crm/company-enrich-button';
+import { Image } from 'lucide-react';
 
 interface Company {
   id: string;
@@ -120,13 +122,16 @@ export default function CompaniesPage() {
           <h1 className="text-3xl lg:text-4xl font-bold text-gradient-violet">Companies</h1>
           <p className="text-lg text-gray-600 mt-2 font-medium">{companies.length} organizations in your portfolio</p>
         </div>
-        <button 
-          onClick={() => setShowNewCompany(true)}
-          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-2xl shadow-lg shadow-violet-500/25 spring-transition hover:scale-105 touch-feedback pulse-glow"
-        >
-          <Plus className="w-5 h-5" />
-          Add Company
-        </button>
+        <div className="flex items-center gap-3">
+          <BulkEnrichButton onComplete={() => loadCompanies()} />
+          <button 
+            onClick={() => setShowNewCompany(true)}
+            className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-2xl shadow-lg shadow-violet-500/25 spring-transition hover:scale-105 touch-feedback pulse-glow"
+          >
+            <Plus className="w-5 h-5" />
+            Add Company
+          </button>
+        </div>
       </div>
 
       {/* Premium Search & Filters */}

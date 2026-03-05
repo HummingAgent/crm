@@ -17,6 +17,18 @@ import {
   Clock
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { ContactResearchPanel } from './contact-research-panel';
+import { ScoreBadge } from './score-badge';
+
+interface ResearchData {
+  summary: string;
+  linkedin_insights: string | null;
+  company_insights: string | null;
+  pain_points: string[];
+  talking_points: string[];
+  recommended_approach: string;
+  researched_at: string;
+}
 
 interface Contact {
   id: string;
@@ -30,6 +42,9 @@ interface Contact {
   location: string | null;
   notes: string | null;
   lead_status: string | null;
+  lead_score?: number | null;
+  research_data?: ResearchData | null;
+  last_researched_at?: string | null;
   created_at: string;
   company?: {
     id: string;
@@ -191,11 +206,16 @@ export function ContactDetailPanel({ contact, onClose, onUpdated, onDeleted, onE
             {contact.title && (
               <p className="text-gray-600">{contact.title}</p>
             )}
-            {contact.lead_status && (
-              <span className={`inline-flex mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[contact.lead_status] || statusColors.new}`}>
-                {contact.lead_status}
-              </span>
-            )}
+            <div className="flex items-center gap-2 mt-1">
+              {contact.lead_status && (
+                <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[contact.lead_status] || statusColors.new}`}>
+                  {contact.lead_status}
+                </span>
+              )}
+              {contact.lead_score !== undefined && contact.lead_score !== null && contact.lead_score > 0 && (
+                <ScoreBadge score={contact.lead_score} size="sm" />
+              )}
+            </div>
           </div>
         </div>
 
@@ -243,6 +263,18 @@ export function ContactDetailPanel({ contact, onClose, onUpdated, onDeleted, onE
               <ExternalLink className="w-3 h-3" />
             </a>
           )}
+        </div>
+
+        {/* AI Research */}
+        <div className="mb-6">
+          <ContactResearchPanel
+            contactId={contact.id}
+            contactName={`${contact.first_name} ${contact.last_name || ''}`}
+            jobTitle={contact.title}
+            companyName={contact.company?.name}
+            existingResearch={contact.research_data}
+            lastResearchedAt={contact.last_researched_at}
+          />
         </div>
 
         {/* Notes */}

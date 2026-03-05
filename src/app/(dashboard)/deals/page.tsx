@@ -20,8 +20,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Filter, DollarSign, User, Building2, X, List, Columns, Pencil, Trash2, Eye, Flame, Sun, Users, TrendingUp } from 'lucide-react';
+import { Plus, Filter, DollarSign, User, Building2, X, List, Columns, Pencil, Trash2, Eye, Flame, Sun, Users, TrendingUp, Calculator } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { ScoreAllButton } from '@/components/crm/score-deal-button';
 import { DealCard } from '@/components/crm/deal-card';
 import { DealColumn } from '@/components/crm/deal-column';
 import { NewDealDialog } from '@/components/crm/new-deal-dialog';
@@ -485,6 +486,12 @@ export default function DealsPage() {
               </button>
             </div>
             
+            {/* Score All */}
+            <ScoreAllButton 
+              type="deal" 
+              onComplete={() => loadData()} 
+            />
+
             {/* Filter */}
             <button 
               onClick={() => setShowFilters(true)}
