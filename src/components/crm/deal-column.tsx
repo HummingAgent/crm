@@ -102,18 +102,18 @@ export function DealColumn({
   if (isCollapsed) {
     return (
       <div 
-        className="flex-shrink-0 w-10 bg-zinc-900/50 border border-zinc-800/50 rounded-xl cursor-pointer hover:bg-zinc-800/50 transition-all"
+        className="flex-shrink-0 w-10 bg-[var(--card)] border border-[var(--border)] rounded-xl cursor-pointer hover:bg-[var(--card-hover)] transition-all"
         onClick={() => setIsCollapsed(false)}
       >
         <div className="flex flex-col items-center py-3 gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
-          <span className="text-xs font-medium text-zinc-400 writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+          <span className="text-xs font-medium text-[var(--muted)] writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
             {stage.name}
           </span>
-          <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-[10px] font-medium text-zinc-400">
+          <span className="px-1.5 py-0.5 bg-[var(--card-hover)] rounded text-[10px] font-medium text-[var(--muted)]">
             {deals.length}
           </span>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-500 mt-2" />
+          <ChevronRight className="w-3.5 h-3.5 text-[var(--muted)] mt-2" />
         </div>
       </div>
     );
@@ -123,58 +123,58 @@ export function DealColumn({
     <div
       className={cn(
         'flex flex-col w-72 sm:w-80 min-w-72 sm:min-w-80 h-full rounded-xl transition-all duration-200',
-        'bg-zinc-900/50 border border-zinc-800/50',
-        isOver && 'ring-2 ring-indigo-500/50 bg-indigo-950/20'
+        'bg-[var(--card)]/50 border border-[var(--border)]',
+        isOver && 'ring-2 ring-[var(--primary)]/50 bg-[var(--primary-light)]'
       )}
     >
       {/* Column Header */}
-      <div className="flex flex-col px-4 py-3 border-b border-zinc-800/50">
+      <div className="flex flex-col px-4 py-3 border-b border-[var(--border)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsCollapsed(true)}
-              className="p-0.5 text-zinc-500 hover:text-white rounded hover:bg-zinc-800 transition-colors"
+              className="p-0.5 text-[var(--muted)] hover:text-[var(--foreground)] rounded hover:bg-[var(--card-hover)] transition-colors"
               title="Collapse column"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
-            <h3 className="font-medium text-white text-sm">{stage.name}</h3>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+            <h3 className="font-medium text-[var(--foreground)] text-sm">{stage.name}</h3>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--card-hover)] text-[var(--muted)]">
               {deals.length}
             </span>
           </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded transition-colors">
+              <button className="p-1 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded transition-colors">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 bg-zinc-800 border-zinc-700">
-              <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)} className="text-zinc-300 hover:text-white hover:bg-zinc-700">
+            <DropdownMenuContent align="end" className="w-44 bg-[var(--card)] border-[var(--border)]">
+              <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)} className="text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
                 <Plus className="w-4 h-4 mr-2" />
                 Add deal
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsCollapsed(true)} className="text-zinc-300 hover:text-white hover:bg-zinc-700">
+              <DropdownMenuItem onClick={() => setIsCollapsed(true)} className="text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
                 <ChevronRight className="w-4 h-4 mr-2" />
                 Collapse
               </DropdownMenuItem>
               
               {deals.length > 0 && otherStages.length > 0 && (
                 <>
-                  <DropdownMenuSeparator className="bg-zinc-700" />
+                  <DropdownMenuSeparator className="bg-[var(--border)]" />
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="text-zinc-300 hover:text-white hover:bg-zinc-700">
+                    <DropdownMenuSubTrigger className="text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
                       <ArrowRight className="w-4 h-4 mr-2" />
                       Move all to...
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-44 bg-zinc-800 border-zinc-700">
+                    <DropdownMenuSubContent className="w-44 bg-[var(--card)] border-[var(--border)]">
                       {otherStages.map((targetStage) => (
                         <DropdownMenuItem 
                           key={targetStage.id}
                           onClick={() => onMoveAllDeals?.(stage.id, targetStage.id)}
-                          className="text-zinc-300 hover:text-white hover:bg-zinc-700"
+                          className="text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]"
                         >
                           <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: targetStage.color }} />
                           {targetStage.name}
@@ -187,10 +187,10 @@ export function DealColumn({
               
               {deals.length > 0 && (
                 <>
-                  <DropdownMenuSeparator className="bg-zinc-700" />
+                  <DropdownMenuSeparator className="bg-[var(--border)]" />
                   <DropdownMenuItem 
                     onClick={() => onDeleteAllDeals?.(stage.id)}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                    className="text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete all ({deals.length})
@@ -202,7 +202,7 @@ export function DealColumn({
         </div>
 
         {/* Total value */}
-        <span className="text-sm text-zinc-500 mt-1 ml-9">
+        <span className="text-sm text-[var(--muted)] mt-1 ml-9">
           {formatCurrency(total)}
         </span>
       </div>
@@ -223,7 +223,7 @@ export function DealColumn({
           </SortableContext>
 
           {deals.length === 0 && (
-            <div className="flex items-center justify-center h-24 text-zinc-600 text-sm">
+            <div className="flex items-center justify-center h-24 text-[var(--muted)] text-sm">
               No deals
             </div>
           )}
@@ -231,10 +231,10 @@ export function DealColumn({
       </div>
 
       {/* Add Deal Button (bottom) */}
-      <div className="p-2 border-t border-zinc-800/50">
+      <div className="p-2 border-t border-[var(--border)]">
         <button 
           onClick={() => onAddDeal?.(stage.id)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-zinc-500 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add deal

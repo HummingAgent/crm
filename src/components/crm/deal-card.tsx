@@ -138,9 +138,9 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
         onClick={() => onView?.(deal)}
         className={cn(
           'group relative p-4 rounded-lg border transition-all duration-200 cursor-pointer',
-          'bg-zinc-900 border-zinc-800 hover:border-zinc-700',
-          'hover:shadow-lg hover:shadow-black/20',
-          (isDragging || isSorting) && 'opacity-50 scale-105 shadow-2xl shadow-indigo-500/20 border-indigo-500/50'
+          'bg-[var(--card)] border-[var(--border)] hover:border-[var(--muted-foreground)]',
+          'hover:shadow-lg',
+          (isDragging || isSorting) && 'opacity-50 scale-105 shadow-2xl shadow-[var(--primary)]/20 border-[var(--primary)]/50'
         )}
       >
         {/* Priority indicator bar */}
@@ -154,38 +154,38 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
 
         {/* Header with title and menu */}
         <div className="flex items-start justify-between mb-2 pl-2">
-          <h4 className="text-sm font-medium text-white pr-6 line-clamp-2">
-            {deal.name}
+          <h4 className="text-sm font-medium text-[var(--foreground)] pr-6 line-clamp-2">
+            {deal.name || deal.company?.name || 'Untitled Deal'}
           </h4>
           <div className="relative" ref={menuRef}>
             <button 
               onClick={handleMenuClick}
               onTouchEnd={handleMenuClick}
-              className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded transition-colors touch-manipulation absolute -top-1 -right-1"
+              className="p-1 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded transition-colors touch-manipulation absolute -top-1 -right-1"
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
             
             {showMenu && !isMobile && (
-              <div className="absolute right-0 top-6 z-50 w-36 bg-zinc-800 rounded-lg shadow-xl border border-zinc-700 py-1 animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute right-0 top-6 z-50 w-36 bg-[var(--card)] rounded-lg shadow-xl border border-[var(--border)] py-1 animate-in fade-in zoom-in-95 duration-100">
                 <button
                   onClick={(e) => { e.stopPropagation(); onView?.(deal); setShowMenu(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   View
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit?.(deal); setShowMenu(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                   Edit
                 </button>
-                <div className="border-t border-zinc-700 my-1" />
+                <div className="border-t border-[var(--border)] my-1" />
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/20"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--danger)] hover:bg-[var(--danger)]/10"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Delete
@@ -201,24 +201,24 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
             {deal.company.logo_url ? (
               <img src={deal.company.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
             ) : (
-              <Building2 className="w-4 h-4 text-zinc-500" />
+              <Building2 className="w-4 h-4 text-[var(--muted)]" />
             )}
-            <span className="text-xs text-zinc-500 truncate">{deal.company.name}</span>
+            <span className="text-xs text-[var(--muted)] truncate">{deal.company.name}</span>
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pl-2 pt-2 border-t border-zinc-800">
+        <div className="flex items-center justify-between pl-2 pt-2 border-t border-[var(--border)]">
           <div className="flex items-center gap-3">
             {/* Amount */}
-            <div className="flex items-center gap-1 text-sm font-semibold text-white">
-              <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="flex items-center gap-1 text-sm font-semibold text-[var(--foreground)]">
+              <DollarSign className="w-3.5 h-3.5 text-[var(--success)]" />
               {deal.amount ? formatCurrency(deal.amount) : '—'}
             </div>
 
             {/* Date */}
             {deal.expected_close_date && (
-              <div className="flex items-center gap-1 text-xs text-zinc-500">
+              <div className="flex items-center gap-1 text-xs text-[var(--muted)]">
                 <Calendar className="w-3 h-3" />
                 {formatDate(deal.expected_close_date)}
               </div>
@@ -227,14 +227,14 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
 
           {/* Owner */}
           {deal.owner && (
-            <div className="flex items-center gap-1.5 bg-zinc-800 rounded-full pl-1 pr-2 py-0.5">
+            <div className="flex items-center gap-1.5 bg-[var(--card-hover)] rounded-full pl-1 pr-2 py-0.5">
               <div 
                 className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
                 style={{ backgroundColor: deal.owner.color }}
               >
                 {deal.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
-              <span className="text-[10px] text-zinc-300 max-w-[50px] truncate">
+              <span className="text-[10px] text-[var(--muted)] max-w-[50px] truncate">
                 {deal.owner.name.split(' ')[0]}
               </span>
             </div>
