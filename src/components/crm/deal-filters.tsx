@@ -10,6 +10,8 @@ interface DealFiltersProps {
     sources: string[];
     minAmount: number | null;
     maxAmount: number | null;
+    minScore: number | null;
+    maxScore: number | null;
   };
   onChange: (filters: DealFiltersProps['filters']) => void;
   onClose: () => void;
@@ -78,17 +80,21 @@ export function DealFilters({ filters, onChange, onClose }: DealFiltersProps) {
       sources: [],
       minAmount: null,
       maxAmount: null,
+      minScore: null,
+      maxScore: null,
     };
     setLocalFilters(cleared);
     onChange(cleared);
   };
 
-  const activeCount = 
-    localFilters.stages.length + 
-    localFilters.priorities.length + 
+  const activeCount =
+    localFilters.stages.length +
+    localFilters.priorities.length +
     localFilters.sources.length +
     (localFilters.minAmount ? 1 : 0) +
-    (localFilters.maxAmount ? 1 : 0);
+    (localFilters.maxAmount ? 1 : 0) +
+    (localFilters.minScore ? 1 : 0) +
+    (localFilters.maxScore ? 1 : 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20">

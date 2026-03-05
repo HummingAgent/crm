@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DollarSign, Calendar, Building2, User, MoreHorizontal, Eye, Pencil, Trash2, ArrowRight, Phone, Mail } from 'lucide-react';
+import { DollarSign, Calendar, Building2, User, MoreHorizontal, Eye, Pencil, Trash2, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
+import { ScoreBadge } from './score-badge';
 
 interface Deal {
   id: string;
@@ -21,6 +22,7 @@ interface Deal {
   lead_source: string | null;
   deal_type: string | null;
   last_activity_at: string | null;
+  lead_score?: number;
   company?: {
     id: string;
     name: string;
@@ -105,10 +107,10 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
   };
 
   const priorityColors = {
-    low: 'bg-gray-100 text-gray-600',
-    medium: 'bg-blue-100 text-blue-700',
-    high: 'bg-orange-100 text-orange-700',
-    urgent: 'bg-red-100 text-red-700',
+    low: 'bg-[var(--card-hover)] text-[var(--muted)]',
+    medium: 'bg-[var(--info-light)] text-[var(--info)]',
+    high: 'bg-[var(--warning-light)] text-[var(--warning)]',
+    urgent: 'bg-[var(--danger-light)] text-[var(--danger)]',
   };
 
   const handleMenuClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -137,17 +139,14 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
         {...attributes}
         {...listeners}
         className={cn(
-          'bg-white rounded-xl border border-gray-200 p-4 cursor-grab active:cursor-grabbing',
-          'hover:shadow-md hover:border-gray-300 transition-all',
-          'touch-manipulation select-none',
-          (isDragging || isSorting) && 'opacity-50 shadow-lg rotate-1 scale-105',
-          isDragging && 'shadow-2xl'
+          'kanban-card',
+          (isDragging || isSorting) && 'kanban-card-dragging opacity-90'
         )}
       >
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <h3 
-            className="font-medium text-gray-900 text-sm leading-tight pr-2 cursor-pointer hover:text-violet-600 active:text-violet-700"
+            className="font-medium text-[var(--foreground)] text-sm leading-tight pr-2 cursor-pointer hover:text-[var(--primary)] transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onView?.(deal);
@@ -159,23 +158,23 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
             <button 
               onClick={handleMenuClick}
               onTouchEnd={handleMenuClick}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 rounded-lg -mr-1 -mt-1 transition-colors touch-manipulation"
+              className="p-1.5 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-md -mr-1 -mt-1 transition-colors touch-manipulation"
             >
-              <MoreHorizontal className="w-5 h-5" />
+              <MoreHorizontal className="w-4 h-4" />
             </button>
             
             {/* Desktop Dropdown Menu */}
             {showMenu && !isMobile && (
-              <div className="absolute right-0 top-10 z-50 w-44 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 top-8 z-50 w-40 bg-[var(--card)] rounded-lg shadow-lg border border-[var(--border)] py-1 animate-scale-in">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onView?.(deal);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)]"
                 >
-                  <Eye className="w-4 h-4 text-gray-400" />
+                  <Eye className="w-4 h-4 text-[var(--muted)]" />
                   View Details
                 </button>
                 <button
@@ -184,18 +183,18 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
                     onEdit?.(deal);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)]"
                 >
-                  <Pencil className="w-4 h-4 text-gray-400" />
+                  <Pencil className="w-4 h-4 text-[var(--muted)]" />
                   Edit Deal
                 </button>
-                <div className="border-t border-gray-100 my-1.5" />
+                <div className="border-t border-[var(--border)] my-1" />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete();
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--danger)] hover:bg-[var(--danger-light)]"
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete
@@ -215,23 +214,23 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
                 className="w-5 h-5 rounded object-cover"
               />
             ) : (
-              <div className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center">
-                <Building2 className="w-3 h-3 text-gray-400" />
+              <div className="w-5 h-5 rounded bg-[var(--card-hover)] flex items-center justify-center">
+                <Building2 className="w-3 h-3 text-[var(--muted)]" />
               </div>
             )}
-            <span className="text-xs text-gray-600 truncate">{deal.company.name}</span>
+            <span className="text-xs text-[var(--muted)] truncate">{deal.company.name}</span>
           </div>
         )}
 
         {/* Contact */}
         {deal.contact && (
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-violet-600">
+            <div className="w-5 h-5 rounded-full bg-[var(--primary-light)] flex items-center justify-center">
+              <span className="text-[10px] font-medium text-[var(--primary)]">
                 {deal.contact.first_name[0]}{deal.contact.last_name?.[0] || ''}
               </span>
             </div>
-            <span className="text-xs text-gray-600 truncate">
+            <span className="text-xs text-[var(--muted)] truncate">
               {deal.contact.first_name} {deal.contact.last_name}
             </span>
           </div>
@@ -241,42 +240,47 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
         {deal.owner && (
           <div className="flex items-center gap-2 mb-3">
             <div 
-              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
               style={{ backgroundColor: deal.owner.color }}
             >
               {deal.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </div>
-            <span className="text-xs text-gray-500 truncate">
+            <span className="text-xs text-[var(--muted-foreground)] truncate">
               {deal.owner.name}
             </span>
           </div>
         )}
 
         {/* Amount & Date */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-1 text-sm font-semibold text-gray-900">
-            <DollarSign className="w-3.5 h-3.5 text-green-600" />
+        <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)]">
+          <div className="flex items-center gap-1 text-sm font-semibold text-[var(--foreground)]">
+            <DollarSign className="w-3.5 h-3.5 text-[var(--success)]" />
             {deal.amount ? formatCurrency(deal.amount) : '—'}
           </div>
           {deal.expected_close_date && (
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1 text-xs text-[var(--muted)]">
               <Calendar className="w-3 h-3" />
               {formatDate(deal.expected_close_date)}
             </div>
           )}
         </div>
 
-        {/* Priority badge */}
-        {deal.priority && deal.priority !== 'medium' && (
-          <div className="mt-2">
-            <span className={cn(
-              'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-              priorityColors[deal.priority as keyof typeof priorityColors] || priorityColors.medium
-            )}>
-              {deal.priority}
-            </span>
+        {/* Priority badge & Score */}
+        {(deal.priority && deal.priority !== 'medium') || (deal.lead_score !== undefined && deal.lead_score > 0) ? (
+          <div className="mt-2 flex items-center gap-2">
+            {deal.priority && deal.priority !== 'medium' && (
+              <span className={cn(
+                'badge',
+                priorityColors[deal.priority as keyof typeof priorityColors] || priorityColors.medium
+              )}>
+                {deal.priority}
+              </span>
+            )}
+            {deal.lead_score !== undefined && deal.lead_score > 0 && (
+              <ScoreBadge score={deal.lead_score} size="sm" />
+            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Mobile Bottom Sheet */}
@@ -287,19 +291,19 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
       >
         <div className="py-2">
           {/* Deal summary */}
-          <div className="px-4 py-3 border-b border-gray-100">
+          <div className="px-4 py-3 border-b border-[var(--border)]">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-2xl font-bold text-gray-900">
+              <span className="text-2xl font-bold text-[var(--foreground)]">
                 {deal.amount ? formatCurrency(deal.amount) : '—'}
               </span>
               {deal.expected_close_date && (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-[var(--muted)]">
                   Close: {formatDate(deal.expected_close_date)}
                 </span>
               )}
             </div>
             {deal.company && (
-              <p className="text-sm text-gray-600">{deal.company.name}</p>
+              <p className="text-sm text-[var(--muted)]">{deal.company.name}</p>
             )}
           </div>
 
@@ -307,14 +311,14 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
           {deal.contact?.email && (
             <a
               href={`mailto:${deal.contact.email}`}
-              className="w-full flex items-center gap-4 px-4 py-4 text-gray-700 active:bg-gray-50"
+              className="w-full flex items-center gap-4 px-4 py-4 text-[var(--foreground)] active:bg-[var(--card-hover)]"
             >
-              <Mail className="w-5 h-5 text-gray-400" />
+              <Mail className="w-5 h-5 text-[var(--muted)]" />
               <span className="font-medium">Email {deal.contact.first_name}</span>
             </a>
           )}
 
-          <div className="border-t border-gray-100" />
+          <div className="border-t border-[var(--border)]" />
 
           {/* Main actions */}
           <BottomSheetItem
@@ -334,7 +338,7 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
             }}
           />
           
-          <div className="border-t border-gray-100 mt-2" />
+          <div className="border-t border-[var(--border)] mt-2" />
           
           <BottomSheetItem
             icon={<Trash2 className="w-5 h-5" />}

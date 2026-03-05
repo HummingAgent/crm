@@ -92,118 +92,114 @@ export function DealColumn({
     return `$${amount}`;
   };
 
-  // Other stages for "Move all to..." menu
   const otherStages = allStages.filter(s => s.id !== stage.id);
 
   if (isCollapsed) {
     return (
       <div 
-        className="flex-shrink-0 w-12 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+        className="flex-shrink-0 w-10 bg-[var(--card)] border border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--card-hover)] transition-colors"
         onClick={() => setIsCollapsed(false)}
       >
         <div className="flex flex-col items-center py-3 gap-2">
           <div 
-            className="w-3 h-3 rounded-full" 
+            className="w-2.5 h-2.5 rounded-full" 
             style={{ backgroundColor: stage.color }}
           />
-          <span className="text-xs font-medium text-gray-600 writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+          <span className="text-xs font-medium text-[var(--muted)] writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
             {stage.name}
           </span>
-          <span className="px-1.5 py-0.5 bg-gray-200 rounded-full text-xs font-medium text-gray-600">
+          <span className="px-1.5 py-0.5 bg-[var(--card-hover)] rounded text-[10px] font-medium text-[var(--muted)]">
             {deals.length}
           </span>
-          <span className="text-xs text-gray-500 writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
-            {formatCurrency(total)}
-          </span>
-          <ChevronRight className="w-4 h-4 text-gray-400 mt-2" />
+          <ChevronRight className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-2" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-shrink-0 w-72">
+    <div className="kanban-column flex-shrink-0">
       {/* Column Header */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setIsCollapsed(true)}
-            className="p-0.5 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100"
-            title="Collapse column"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          <div 
-            className="w-3 h-3 rounded-full" 
-            style={{ backgroundColor: stage.color }}
-          />
-          <h3 className="font-semibold text-gray-900 text-sm">{stage.name}</h3>
-          <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600">
-            {deals.length}
-          </span>
-        </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="p-1 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
-              <MoreHorizontal className="w-4 h-4" />
+      <div className="kanban-column-header">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsCollapsed(true)}
+              className="p-0.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)] rounded hover:bg-[var(--card-hover)] transition-colors"
+              title="Collapse column"
+            >
+              <ChevronDown className="w-4 h-4" />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add deal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsCollapsed(true)}>
-              <ChevronRight className="w-4 h-4 mr-2" />
-              Collapse column
-            </DropdownMenuItem>
-            
-            {deals.length > 0 && otherStages.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <ArrowRight className="w-4 h-4 mr-2" />
-                    Move all to...
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-48">
-                    {otherStages.map((targetStage) => (
-                      <DropdownMenuItem 
-                        key={targetStage.id}
-                        onClick={() => onMoveAllDeals?.(stage.id, targetStage.id)}
-                      >
-                        <div 
-                          className="w-2 h-2 rounded-full mr-2" 
-                          style={{ backgroundColor: targetStage.color }}
-                        />
-                        {targetStage.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              </>
-            )}
-            
-            {deals.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  variant="destructive"
-                  onClick={() => onDeleteAllDeals?.(stage.id)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete all ({deals.length})
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+            <div 
+              className="w-2.5 h-2.5 rounded-full" 
+              style={{ backgroundColor: stage.color }}
+            />
+            <h3 className="font-medium text-[var(--foreground)] text-sm">{stage.name}</h3>
+            <span className="px-1.5 py-0.5 bg-[var(--card-hover)] rounded text-xs font-medium text-[var(--muted)]">
+              {deals.length}
+            </span>
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] rounded hover:bg-[var(--card-hover)] transition-colors">
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => onAddDeal?.(stage.id)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add deal
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsCollapsed(true)}>
+                <ChevronRight className="w-4 h-4 mr-2" />
+                Collapse column
+              </DropdownMenuItem>
+              
+              {deals.length > 0 && otherStages.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Move all to...
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-44">
+                      {otherStages.map((targetStage) => (
+                        <DropdownMenuItem 
+                          key={targetStage.id}
+                          onClick={() => onMoveAllDeals?.(stage.id, targetStage.id)}
+                        >
+                          <div 
+                            className="w-2 h-2 rounded-full mr-2" 
+                            style={{ backgroundColor: targetStage.color }}
+                          />
+                          {targetStage.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </>
+              )}
+              
+              {deals.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    variant="destructive"
+                    onClick={() => onDeleteAllDeals?.(stage.id)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete all ({deals.length})
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-      {/* Total value */}
-      <div className="px-1 mb-3">
-        <span className="text-sm font-medium text-gray-500">
+        {/* Total value */}
+        <span className="text-sm font-medium text-[var(--muted)]">
           {formatCurrency(total)}
         </span>
       </div>
@@ -212,8 +208,8 @@ export function DealColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          'flex flex-col gap-2 min-h-[200px] p-2 rounded-lg transition-colors',
-          isOver ? 'bg-violet-50 border-2 border-dashed border-violet-300' : 'bg-gray-50/50'
+          'kanban-column-content',
+          isOver && 'bg-[var(--primary-light)] border-2 border-dashed border-[var(--primary-muted)] rounded-lg'
         )}
       >
         <SortableContext items={deals.map(d => d.id)} strategy={verticalListSortingStrategy}>
@@ -229,7 +225,7 @@ export function DealColumn({
         </SortableContext>
 
         {deals.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-8 text-[var(--muted-foreground)]">
             <p className="text-sm">No deals</p>
           </div>
         )}
@@ -237,7 +233,7 @@ export function DealColumn({
         {/* Add deal button */}
         <button 
           onClick={() => onAddDeal?.(stage.id)}
-          className="flex items-center justify-center gap-2 py-2.5 text-sm text-gray-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg border border-dashed border-gray-300 hover:border-violet-300 transition-colors mt-auto"
+          className="flex items-center justify-center gap-2 w-full py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] rounded-lg border border-dashed border-[var(--border)] hover:border-[var(--primary-muted)] transition-colors mt-2"
         >
           <Plus className="w-4 h-4" />
           Add deal
