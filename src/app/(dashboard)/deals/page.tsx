@@ -66,6 +66,7 @@ interface Deal {
   deal_type: string | null;
   last_activity_at: string | null;
   pipeline_id: string | null;
+  lead_score?: number | null;
   company?: {
     id: string;
     name: string;
@@ -259,6 +260,7 @@ export default function DealsPage() {
         contact:crm_contacts(id, first_name, last_name, email),
         owner:crm_team_members(id, name, email, color, avatar_url)
       `)
+      .order('lead_score', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
 
     const { data: stagesData } = await supabase

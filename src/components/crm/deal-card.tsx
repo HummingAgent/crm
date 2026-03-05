@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DollarSign, Calendar, Building2, User, MoreHorizontal, Eye, Pencil, Trash2, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
+import { ScoreIndicator } from './score-badge';
 
 interface Deal {
   id: string;
@@ -22,6 +23,7 @@ interface Deal {
   lead_source: string | null;
   deal_type: string | null;
   last_activity_at: string | null;
+  lead_score?: number | null;
   company?: {
     id: string;
     name: string;
@@ -264,15 +266,20 @@ export function DealCard({ deal, isDragging, onView, onEdit, onDelete }: DealCar
           )}
         </div>
 
-        {/* Priority badge */}
-        {deal.priority && deal.priority !== 'medium' && (
-          <div className="mt-2">
-            <span className={cn(
-              'badge',
-              priorityColors[deal.priority as keyof typeof priorityColors] || priorityColors.medium
-            )}>
-              {deal.priority}
-            </span>
+        {/* Priority badge & Score */}
+        {((deal.priority && deal.priority !== 'medium') || (deal.lead_score && deal.lead_score > 0)) && (
+          <div className="mt-2 flex items-center gap-2">
+            {deal.priority && deal.priority !== 'medium' && (
+              <span className={cn(
+                'badge',
+                priorityColors[deal.priority as keyof typeof priorityColors] || priorityColors.medium
+              )}>
+                {deal.priority}
+              </span>
+            )}
+            {deal.lead_score && deal.lead_score > 0 && (
+              <ScoreIndicator score={deal.lead_score} />
+            )}
           </div>
         )}
       </div>
