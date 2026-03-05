@@ -1,10 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // GET /api/deals/[id] - Get a single deal
 export async function GET(
@@ -94,7 +90,7 @@ export async function PATCH(
 
     // Log stage change activity
     if (body.stage && currentDeal && body.stage !== currentDeal.stage) {
-      await supabase.from('crm_activities').insert({
+      await getAdminClient().from('crm_activities').insert({
         deal_id: id,
         type: 'stage-change',
         stage_from: currentDeal.stage,

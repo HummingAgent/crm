@@ -1,11 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
 // Use service role for API access
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // GET /api/deals - List deals with optional filters
 export async function GET(request: Request) {
@@ -116,7 +112,7 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     // Log activity
-    await supabase.from('crm_activities').insert({
+    await getAdminClient().from('crm_activities').insert({
       deal_id: data.id,
       type: 'note',
       subject: 'Deal created via API',

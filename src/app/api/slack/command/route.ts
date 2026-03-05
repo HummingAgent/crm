@@ -1,10 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -156,7 +152,7 @@ async function handleDeal(args: string[]): Promise<NextResponse> {
     if (error) throw error;
 
     if (existing.stage !== stage) {
-      await supabase.from('crm_activities').insert({
+      await getAdminClient().from('crm_activities').insert({
         deal_id: existing.id,
         type: 'stage-change',
         stage_from: existing.stage,
@@ -180,7 +176,7 @@ async function handleDeal(args: string[]): Promise<NextResponse> {
 
   if (error) throw error;
 
-  await supabase.from('crm_activities').insert({
+  await getAdminClient().from('crm_activities').insert({
     deal_id: deal.id,
     type: 'note',
     subject: 'Deal created via Slack',
@@ -227,7 +223,7 @@ async function handleLog(args: string[], fullText: string): Promise<NextResponse
     return slackResponse('❌ Please provide a note after the deal name.');
   }
 
-  const { error } = await supabase.from('crm_activities').insert({
+  const { error } = await getAdminClient().from('crm_activities').insert({
     deal_id: deal.id,
     type: 'note',
     subject: `Slack note`,

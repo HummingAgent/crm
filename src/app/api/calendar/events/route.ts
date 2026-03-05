@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CALENDAR_CLIENT_ID!;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CALENDAR_CLIENT_SECRET!;
+// Lazy-initialized clients to avoid build-time errors
+let _supabase: SupabaseClient | null = null;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
+
+function getGoogleCredentials() {
+  return {
+    clientId: process.env.GOOGLE_CALENDAR_CLIENT_ID!,
+    clientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET!,
+  };
+}
 
 interface CalendarConnection {
   id: string;
@@ -53,12 +65,13 @@ async function refreshTokenIfNeeded(connection: CalendarConnection): Promise<str
     throw new Error('No refresh token available');
   }
 
+  const { clientId, clientSecret } = getGoogleCredentials();
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       refresh_token: connection.refresh_token,
       grant_type: 'refresh_token',
     }),
@@ -74,7 +87,7 @@ async function refreshTokenIfNeeded(connection: CalendarConnection): Promise<str
   const newExpiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
   // Update token in database
-  await supabase
+  await getSupabase()
     .from('crm_calendar_connections')
     .update({
       access_token: tokens.access_token,
@@ -125,6 +138,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get all active calendar connections
+    const supabase = getSupabase();
     let query = supabase
       .from('crm_calendar_connections')
       .select(`
@@ -183,7 +197,7 @@ export async function GET(request: NextRequest) {
         } catch (err) {
           console.error(`Failed to fetch events for ${conn.google_email}:`, err);
           // Update connection with error
-          await supabase
+          await getSupabase()
             .from('crm_calendar_connections')
             .update({ 
               sync_error: err instanceof Error ? err.message : 'Unknown error',

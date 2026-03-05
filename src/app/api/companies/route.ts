@@ -1,17 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // GET /api/companies - List companies
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     
-    let query = supabase.from('crm_companies').select('*');
+    let query = getAdminClient().from('crm_companies').select('*');
 
     // Filter by industry
     const industry = searchParams.get('industry');
