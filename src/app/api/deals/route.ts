@@ -83,6 +83,7 @@ export async function GET(request: Request) {
 
 // POST /api/deals - Create a new deal
 export async function POST(request: Request) {
+  const supabase = getAdminClient();
   try {
     const body = await request.json();
 

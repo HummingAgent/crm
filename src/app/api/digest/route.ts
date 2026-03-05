@@ -27,6 +27,7 @@ function formatDate(dateStr: string): string {
 }
 
 export async function POST(request: Request) {
+  const supabase = getAdminClient();
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

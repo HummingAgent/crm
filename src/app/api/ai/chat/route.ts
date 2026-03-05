@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAzure } from '@ai-sdk/azure';
 import { generateText } from 'ai';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 
-// Azure OpenAI configuration
-const rawEndpoint = process.env.AZURE_OPENAI_ENDPOINT ?? "";
-const resourceBase = rawEndpoint.replace(/\/openai\/.*$/, "");
+// Lazy-initialized Azure client
+let _azure: ReturnType<typeof createAzure> | null = null;
 
-const azure = createAzure({
-  baseURL: `${resourceBase}/openai`,
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? "2025-04-01-preview",
-});
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+function getAzure() {
+  if (!_azure) {
+    const rawEndpoint = process.env.AZURE_OPENAI_ENDPOINT ?? "";
+    const resourceBase = rawEndpoint.replace(/\/openai\/.*$/, "");
+    _azure = createAzure({
+      baseURL: `${resourceBase}/openai`,
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? "2025-04-01-preview",
+    });
+  }
+  return _azure;
+}
 
 async function getCRMContext() {
+  const supabase = getAdminClient();
   // Fetch pipeline summary
   const { data: deals } = await supabase
     .from('crm_deals')
@@ -102,7 +104,7 @@ ${crmContext}`;
     const model = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-5.2";
 
     const { text } = await generateText({
-      model: azure.chat(model),
+      model: getAzure().chat(model),
       system: systemMessage,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',

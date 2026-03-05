@@ -4,6 +4,7 @@ import { getAdminClient } from '@/lib/supabase/admin';
 
 // GET: List team members with connection status
 export async function GET() {
+  const supabase = getAdminClient();
   try {
     const { data: members, error } = await supabase
       .from('crm_team_members')
@@ -46,6 +47,7 @@ export async function GET() {
 
 // POST: Add a new team member
 export async function POST(request: NextRequest) {
+  const supabase = getAdminClient();
   try {
     const body = await request.json();
     const { name, email, color } = body;

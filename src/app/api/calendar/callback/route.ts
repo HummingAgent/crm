@@ -30,15 +30,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { clientId, clientSecret, redirectUri } = getGoogleCredentials();
+    
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
-        client_id: GOOGLE_CLIENT_ID,
-        client_secret: GOOGLE_CLIENT_SECRET,
-        redirect_uri: REDIRECT_URI,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
         grant_type: 'authorization_code',
       }),
     });
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
     // Store connection in database
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
-    const { error: dbError } = await supabase
+    const { error: dbError } = await getAdminClient()
       .from('crm_calendar_connections')
       .upsert({
         team_member_id: teamMemberId,

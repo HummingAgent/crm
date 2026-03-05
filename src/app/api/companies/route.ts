@@ -54,6 +54,7 @@ export async function GET(request: Request) {
 
 // POST /api/companies - Create a company
 export async function POST(request: Request) {
+  const supabase = getAdminClient();
   try {
     const body = await request.json();
 

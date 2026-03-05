@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 // GET /api/settings - Get all settings
 export async function GET() {
+  const supabase = getAdminClient();
   try {
     const { data, error } = await supabase
       .from('crm_settings')
@@ -27,6 +28,7 @@ export async function GET() {
 
 // POST /api/settings - Update settings
 export async function POST(request: Request) {
+  const supabase = getAdminClient();
   try {
     const body = await request.json();
     const { key, value } = body;

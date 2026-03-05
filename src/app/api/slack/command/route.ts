@@ -13,6 +13,7 @@ function formatCurrency(amount: number): string {
 // POST /api/slack/command - Handle Slack slash commands
 // Configure in Slack App: Request URL = https://crm.hummingagent.ai/api/slack/command
 export async function POST(request: Request) {
+  const supabase = getAdminClient();
   try {
     const formData = await request.formData();
     const text = (formData.get('text') as string || '').trim();

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 // GET /api/team - List team members
 export async function GET() {
+  const supabase = getAdminClient();
   try {
     const { data, error } = await supabase
       .from('crm_team_members')
